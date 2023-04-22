@@ -12,7 +12,7 @@
     "express-async-handler": "^1.2.0",
     "fs-extra": "^11.1.0",
     "msgpackr": "^1.8.0"
-  }
+  },
   "pkg": {
 	  "assets": [
 		"Library/idmaps/Quest/*",

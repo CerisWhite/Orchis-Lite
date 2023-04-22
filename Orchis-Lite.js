@@ -38,6 +38,8 @@ if (fs.existsSync('./Library/database/accountrecord.msg.gz')) {
 		MasterIDRecord = msgpack.unpack(buffer);
 	});
 }
+if (!fs.existsSync('./Library')) { fs.mkdirSync('./Library'); }
+if (!fs.existsSync('./Library/database')) { fs.mkdirSync('./Library/database'); }
 let ServerConf = {}
 if (fs.existsSync('./conf.json')) {
 	ServerConf = JSON.parse(fs.readFileSync('./conf.json'));
@@ -82,6 +84,7 @@ function ResHeaders(DataLength) {
 }
 
 function ReadSessionRecord() {
+	if (!fs.existsSync('./Library/database/usersession.msg.gz')) { return {}; }
 	const SessionData = msgpack.unpack(zlib.gunzipSync(fs.readFileSync('./Library/database/usersession.msg.gz')));
 	return SessionData;
 }

@@ -297,7 +297,7 @@ Orchis.post([iOS_Version + "/login/index", Android_Version + "/login/index"], er
 }));
 
 Orchis.post([iOS_Version + "/webview_version/url_list", Android_Version + "/webview_version/url_list"], async (req,res) => {
-	const URLList = fs.readFile(path.join(__dirname, "Library", "function", "url_list.msg"));
+	const URLList = await fs.readFile(path.join(__dirname, "Library", "function", "url_list.msg"));
 	res.set(ResHeaders(URLList.length));
     res.end(URLList);
 });

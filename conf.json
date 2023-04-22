@@ -1,0 +1,10 @@
+{
+	"ssl": false,
+	"cert": "./cert/cert.pem",
+	"chain": "./cert/chain.pem",
+	"key": "./cert/privkey.pem",
+	"port": 80,
+	"is_unified_login": false,
+	"summon_cost": 100,
+	"banner_id": 1020166
+}

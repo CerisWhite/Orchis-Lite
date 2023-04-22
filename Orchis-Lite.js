@@ -214,6 +214,7 @@ Orchis.post([iOS_Version + "/tool/auth", Android_Version + "/tool/auth"], errorh
 		WriteIndexRecord(NewAccountData[2]);
 		SaveUserDB();
 	}
+	UserSessionRecord = ReadSessionRecord();
 	UserSessionRecord['LastLogin'] = Math.floor(Date.now() / 1000);
 	WriteSessionRecord(UserSessionRecord);
 	var JSONDict = { 'data_headers': { 'result_code': 1 }, 'data': { 'viewer_id': 1000, 'session_id': "a1000", 'nonce': null } }

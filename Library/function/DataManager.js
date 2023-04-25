@@ -565,7 +565,6 @@ function LoginBonusData(UserIndexRecord, UserSessionRecord) {
 	UserSessionRecord['SummonRecord']['ItemCount'] = 0;
 	UserSessionRecord['SummonRecord']['FreeTenfoldCount'] = 1;
 	UserSessionRecord['SummonRecord']['DailyLimitCount'] = 1;
-	UserSessionRecord['Kaleidoscape']['RecoveryCount'] = 0;
 	var JSONDict = {
 		'data_headers': {
 			'result_code': 1

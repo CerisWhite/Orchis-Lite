@@ -737,18 +737,18 @@ function ItemParser(ItemTable, UserSessionRecord, UserIndexRecord, TableType) {
 	for (let y in ItemTable) {
 		switch(ItemTable[y][TypeName]) {
 			case 1:
-				if (UserIndexRecord['chara_list'].findIndex(x => x.chara_id === ItemTable[IDName]) == -1) {
+				if (UserIndexRecord['chara_list'].findIndex(x => x.chara_id === ItemTable[y][IDName]) == -1) {
 					if (UpdateData['chara_list'] == undefined) { UpdateData['chara_list'] = []; }
-					UpdateData['chara_list'].push(CharacterMap.CreateCharacterFromGift(ItemTable[IDName], 1));
-					UserIndexRecord['chara_list'].push(CharacterMap.CreateCharacterFromGift(ItemTable[IDName], 1));
-					NewEntityList.push({ 'entity_type': 1, 'entity_id': ItemTable[IDName] });
-					const CharacterElement = CharacterMap.GetCharacterInfo(ItemTable[IDName], 'elemental_type');
+					UpdateData['chara_list'].push(CharacterMap.CreateCharacterFromGift(ItemTable[y][IDName], 1));
+					UserIndexRecord['chara_list'].push(CharacterMap.CreateCharacterFromGift(ItemTable[y][IDName], 1));
+					NewEntityList.push({ 'entity_type': 1, 'entity_id': ItemTable[y][IDName] });
+					const CharacterElement = CharacterMap.GetCharacterInfo(ItemTable[y][IDName], 'elemental_type');
 					const CharacterBonusIndex = UserIndexRecord['fort_bonus_list']['chara_bonus_by_album'].findIndex(x => x.elemental_type == CharacterElement);
 					UserIndexRecord['fort_bonus_list']['chara_bonus_by_album'][CharacterBonusIndex]['hp'] += 0.1;
 					UserIndexRecord['fort_bonus_list']['chara_bonus_by_album'][CharacterBonusIndex]['attack'] += 0.1;
 					UpdateData['fort_bonus_list'] = UserIndexRecord['fort_bonus_list'];
 					if (UpdateData['unit_story_list'] == undefined) { UpdateData['unit_story_list'] = []; } 
-					const UnitStoryData = CharacterMap.GenerateUnitStory(ItemTable[IDName])
+					const UnitStoryData = CharacterMap.GenerateUnitStory(ItemTable[y][IDName]);
 					if (UnitStoryData[0] != undefined) {
 						UpdateData['unit_story_list'].push(UnitStoryData[0], UnitStoryData[1], UnitStoryData[2], UnitStoryData[3], UnitStoryData[4]);
 						UserIndexRecord['unit_story_list'].push(UnitStoryData[0], UnitStoryData[1], UnitStoryData[2], UnitStoryData[3], UnitStoryData[4]); } }

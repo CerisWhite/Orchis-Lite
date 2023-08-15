@@ -1517,14 +1517,14 @@ function PopulateSupportData(SupportSessionRecord, SupportIndexRecord) {
 	let Crest_Slot_Type_One = [];
 	let Crest_Slot_Type_Two = [];
 	let Crest_Slot_Type_Thr = [];
-	Crest_Slot_Type_One[0] = WyrmprintDataReturn(SupportIndexRecord, SupportSessionRecord['SupportCharacter']['equip_crest_slot_type_1_crest_id_1']);
-	Crest_Slot_Type_One[1] = WyrmprintDataReturn(SupportIndexRecord, SupportSessionRecord['SupportCharacter']['equip_crest_slot_type_1_crest_id_2']);
-	Crest_Slot_Type_One[2] = WyrmprintDataReturn(SupportIndexRecord, SupportSessionRecord['SupportCharacter']['equip_crest_slot_type_1_crest_id_3']);
-	Crest_Slot_Type_Two[0] = WyrmprintDataReturn(SupportIndexRecord, SupportSessionRecord['SupportCharacter']['equip_crest_slot_type_2_crest_id_1']);
-	Crest_Slot_Type_Two[1] = WyrmprintDataReturn(SupportIndexRecord, SupportSessionRecord['SupportCharacter']['equip_crest_slot_type_2_crest_id_2']);
-	Crest_Slot_Type_Thr[0] = WyrmprintDataReturn(SupportIndexRecord, SupportSessionRecord['SupportCharacter']['equip_crest_slot_type_3_crest_id_1']);
-	Crest_Slot_Type_Thr[1] = WyrmprintDataReturn(SupportIndexRecord, SupportSessionRecord['SupportCharacter']['equip_crest_slot_type_3_crest_id_2']);
-	const DragonIndex = SupportIndexRecord.dragon_list.findIndex(x => x.dragon_key_id === SupportSessionRecord['SupportCharacter']['equip_dragon_key_id'])
+	Crest_Slot_Type_One[0] = WyrmprintDataReturn(SupportIndexRecord, SupportSessionRecord['equip_crest_slot_type_1_crest_id_1']);
+	Crest_Slot_Type_One[1] = WyrmprintDataReturn(SupportIndexRecord, SupportSessionRecord['equip_crest_slot_type_1_crest_id_2']);
+	Crest_Slot_Type_One[2] = WyrmprintDataReturn(SupportIndexRecord, SupportSessionRecord['equip_crest_slot_type_1_crest_id_3']);
+	Crest_Slot_Type_Two[0] = WyrmprintDataReturn(SupportIndexRecord, SupportSessionRecord['equip_crest_slot_type_2_crest_id_1']);
+	Crest_Slot_Type_Two[1] = WyrmprintDataReturn(SupportIndexRecord, SupportSessionRecord['equip_crest_slot_type_2_crest_id_2']);
+	Crest_Slot_Type_Thr[0] = WyrmprintDataReturn(SupportIndexRecord, SupportSessionRecord['equip_crest_slot_type_3_crest_id_1']);
+	Crest_Slot_Type_Thr[1] = WyrmprintDataReturn(SupportIndexRecord, SupportSessionRecord['equip_crest_slot_type_3_crest_id_2']);
+	const DragonIndex = SupportIndexRecord.dragon_list.findIndex(x => x.dragon_key_id === SupportSessionRecord['equip_dragon_key_id'])
 	let DragonBond = 0;
 	if (DragonIndex != -1) {
 		const DragonID = SupportIndexRecord['dragon_list'][DragonIndex]['dragon_id']
@@ -1532,9 +1532,9 @@ function PopulateSupportData(SupportSessionRecord, SupportIndexRecord) {
 		else { const DragonBondIndex = SupportIndexRecord.dragon_reliability_list.findIndex(x => x.dragon_id === DragonID)
 			DragonBond = SupportIndexRecord['dragon_reliability_list'][DragonBondIndex]['reliability_level'] }
 	}
-	let CharacterData = CharacterDataReturn(SupportIndexRecord, SupportSessionRecord['SupportCharacter']['chara_id']);
-	let DragonData = SupportIndexRecord.dragon_list.find(x => x.dragon_key_id === SupportSessionRecord['SupportCharacter']['equip_dragon_key_id']);
-	let TalismanData = SupportIndexRecord.dragon_list.find(x => x.talisman_key_id === SupportSessionRecord['SupportCharacter']['equip_talisman_key_id']);
+	let CharacterData = CharacterDataReturn(SupportIndexRecord, SupportSessionRecord['chara_id']);
+	let DragonData = SupportIndexRecord.dragon_list.find(x => x.dragon_key_id === SupportSessionRecord['equip_dragon_key_id']);
+	let TalismanData = SupportIndexRecord.dragon_list.find(x => x.talisman_key_id === SupportSessionRecord['equip_talisman_key_id']);
 	if (DragonData == undefined) { DragonData = {}; } if (TalismanData == undefined) { TalismanData = {}; }
 	if (Crest_Slot_Type_One[0] == undefined) { Crest_Slot_Type_One[0] = {}; } if (Crest_Slot_Type_One[1] == undefined) { Crest_Slot_Type_One[1] = {}; } if (Crest_Slot_Type_One[2] == undefined) { Crest_Slot_Type_One[2] = {}; }
 	if (Crest_Slot_Type_Two[0] == undefined) { Crest_Slot_Type_Two[0] = {}; } if (Crest_Slot_Type_Two[1] == undefined) { Crest_Slot_Type_Two[1] = {}; }
@@ -1549,7 +1549,7 @@ function PopulateSupportData(SupportSessionRecord, SupportIndexRecord) {
 		'max_party_power': SupportIndexRecord['party_power_data']['max_party_power'],
 		'chara_data': CharacterData,
 		'dragon_data': DragonData,
-		'weapon_body_data': WeaponDataReturn(SupportIndexRecord, SupportSessionRecord['SupportCharacter']['chara_id'], SupportSessionRecord['SupportCharacter']['equip_weapon_body_id']),
+		'weapon_body_data': WeaponDataReturn(SupportIndexRecord, SupportSessionRecord['chara_id'], SupportSessionRecord['equip_weapon_body_id']),
 		'crest_slot_type_1_crest_list': Crest_Slot_Type_One,
 		'crest_slot_type_2_crest_list': Crest_Slot_Type_Two,
 		'crest_slot_type_3_crest_list': Crest_Slot_Type_Thr,
@@ -1565,7 +1565,7 @@ function PopulateSupportData(SupportSessionRecord, SupportIndexRecord) {
 		'max_party_power': SupportIndexRecord['party_power_data']['max_party_power'],
 		'support_chara': CharacterData,
 		'support_dragon': DragonData,
-		'support_weapon_body': WeaponDataReturn(SupportIndexRecord, SupportSessionRecord['SupportCharacter']['equip_weapon_body_id']),
+		'support_weapon_body': WeaponDataReturn(SupportIndexRecord, SupportSessionRecord['equip_weapon_body_id']),
 		'support_crest_slot_type_1_list': Crest_Slot_Type_One,
 		'support_crest_slot_type_2_list': Crest_Slot_Type_Two,
 		'support_crest_slot_type_3_list': Crest_Slot_Type_Thr,

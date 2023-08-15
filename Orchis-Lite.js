@@ -62,19 +62,19 @@ function ResHeaders(DataLength) {
 }
 
 async function ReadSessionRecord() {
-	const SessionData = msgpack.unpack(fs.readFileSync('./Library/Session.msg'));
+	const SessionData = JSON.parse(fs.readFileSync('./Library/Session.json'));
 	return SessionData;
 }
 async function WriteSessionRecord(Data) {
-	fs.writeFileSync('./Library/Session.msg', msgpack.pack(Data));
+	fs.writeFileSync('./Library/Session.msg', JSON.stringify(Data, null, 2));
 	return;
 }
 async function ReadIndexRecord() {
-	const IndexData = await msgpack.unpack(fs.readFileSync('./Library/Index.msg'));
+	const IndexData = JSON.parse(fs.readFileSync('./Library/Index.json'));
 	return IndexData;
 }
 async function WriteIndexRecord(Data) {
-	fs.writeFileSync('./Library/Index.msg', msgpack.pack(Data));
+	fs.writeFileSync('./Library/Index.msg', JSON.stringify(Data, null, 2));
 	return;
 }
 async function RecordManager (req, res, next) {
@@ -89,8 +89,8 @@ async function RecordManager (req, res, next) {
 let MasterAccountRecord = {};
 let MasterIDRecord = {};
 if (fs.existsSync('./Library/accountrecord.msg.gz')) {
-	msgpack.unpack(fs.readFileSync('./Library/accountrecord.msg.gz'));
-	msgpack.unpack(fs.readFileSync('./Library/idrecord.msg.gz'));
+	msgpack.unpack(fs.readFileSync('./Library/accountrecord.msg'));
+	msgpack.unpack(fs.readFileSync('./Library/idrecord.msg'));
 }
 let ServerConf = {}
 let ServerCerts = {}
@@ -469,8 +469,8 @@ async function ServerReset() {
 	}
 } 
 function SaveUserDB() {
-	fs.writeFileSync('./Library/accountrecord.msg.gz', msgpack.pack(MasterAccountRecord));
-	fs.writeFileSync('./Library/idrecord.msg.gz', msgpack.pack(MasterIDRecord));
+	fs.writeFileSync('./Library/accountrecord.msg', msgpack.pack(MasterAccountRecord));
+	fs.writeFileSync('./Library/idrecord.msg', msgpack.pack(MasterIDRecord));
 }
 
 ServerReset();
@@ -592,7 +592,7 @@ Server.post([iOS_Version + "/tool/auth", Android_Version + "/tool/auth"], errorh
 	}
 	UserSessionRecord['LastLogin'] = Math.floor(Date.now() / 1000);
 	await WriteSessionRecord(UserSessionRecord);
-	const JSONDict = { 'data_headers': { 'result_code': 1 }, 'data': { 'viewer_id': UserIDRecord['ViewerID'], 'session_id': UserIDRecord['SessionID'], 'nonce': null } }
+	const JSONDict = { 'data_headers': { 'result_code': 1 }, 'data': { 'viewer_id': MasterIDRecord['ViewerID'], 'session_id': MasterIDRecord['SessionID'], 'nonce': null } }
 	const Serialized = msgpack.pack(JSONDict); res.set(ResHeaders(Serialized.length)); res.end(Serialized);
 }));
 Server.post([iOS_Version + "/tool/get_service_status", Android_Version + "/tool/get_service_status"], async (req,res) => {

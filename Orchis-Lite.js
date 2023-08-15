@@ -66,7 +66,7 @@ async function ReadSessionRecord() {
 	return SessionData;
 }
 async function WriteSessionRecord(Data) {
-	fs.writeFileSync('./Library/Session.msg', JSON.stringify(Data, null, 2));
+	fs.writeFileSync('./Library/Session.json', JSON.stringify(Data, null, 2));
 	return;
 }
 async function ReadIndexRecord() {
@@ -74,7 +74,7 @@ async function ReadIndexRecord() {
 	return IndexData;
 }
 async function WriteIndexRecord(Data) {
-	fs.writeFileSync('./Library/Index.msg', JSON.stringify(Data, null, 2));
+	fs.writeFileSync('./Library/Index.json', JSON.stringify(Data, null, 2));
 	return;
 }
 async function RecordManager (req, res, next) {
@@ -764,10 +764,10 @@ Server.post([iOS_Version + "/redoable_summon/pre_exec", Android_Version + "/redo
 		let Result = Math.round(Math.random());
 		switch(Result) {
 			case 0:
-				DrawData = CharacterMap.DrawCharacterCorrect(90001011, BannerList, false);
+				DrawData = CharacterMap.DrawCharacterCorrect(90001011, BannerList, false, false);
 				break;
 			case 1:
-				DrawData = DragonMap.DrawDragonCorrect(90001011, BannerList, false);
+				DrawData = DragonMap.DrawDragonCorrect(90001011, BannerList, false, false);
 				break;
 		}
 		var Template = {

@@ -1684,4 +1684,4 @@ function PopulateAssignedUnitData(PartySettings, ViewerID, UserIndexRecord, User
 	return [QuestUnitData, PartySettings];
 }
 
-module.exports = { GetUserSave, CleanIndex, GetPlayerQuestData, GetPlayerQuestDataShort, GetPlayerQuestPlayCount, GetMissionNotice, GenerateSummonOdds, LoginBonusData, MyPageInfo, MissionList, DungeonRecord, DungeonSkipRecord, SetClearParty, ItemParser, PopulateUnitData, PopulateSupportData, PopulateAssignedUnitData, WallRecord, GetWallDrop, KeyIDByTicket }
+module.exports = { GetPlayerQuestData, GetPlayerQuestDataShort, GetPlayerQuestPlayCount, GetMissionNotice, GenerateSummonOdds, LoginBonusData, MyPageInfo, MissionList, DungeonRecord, DungeonSkipRecord, SetClearParty, ItemParser, PopulateUnitData, PopulateSupportData, PopulateAssignedUnitData, WallRecord, GetWallDrop, KeyIDByTicket }

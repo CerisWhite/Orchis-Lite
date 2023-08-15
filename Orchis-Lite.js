@@ -572,15 +572,13 @@ Server.post([iOS_Version + "/tool/signup", Android_Version + "/tool/signup"], er
 Server.post([iOS_Version + "/tool/auth", Android_Version + "/tool/auth"], errorhandler(async (req,res) => {
 	if (MasterIDRecord['SessionID'] == undefined) {
 		const NewAccountData = await CreateAccountShell();
-		UserAccountRecord = NewAccountData[0];
-		UserIDRecord = NewAccountData[0];
-		MasterIDRecord = UserIDRecord;
-		UserSessionRecord = NewAccountData[1];
-		await WriteSessionRecord(UserSessionRecord);
+		MasterAccountRecord = NewAccountData[0];
+		MasterIDRecord = NewAccountData[0];
+		await WriteSessionRecord(NewAccountData[1]);
 		await WriteIndexRecord(NewAccountData[2]);
 		SaveUserDB();
 	}
-	let UserSessionRecord = ReadSessionRecord();
+	let UserSessionRecord = await ReadSessionRecord();
 	if (req.get('sid') != undefined && UserSessionRecord['LastLogin'] < LastServerReset) {
 		UserSessionRecord['LoginBonus']['Display'] = true;
 		UserSessionRecord['LastLogin'] = Math.floor(Date.now() / 1000);

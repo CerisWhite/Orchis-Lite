@@ -6393,4 +6393,4 @@ function DrawCharacterCorrect(SummonID, BoostRateList, IsTenfold, IsPlatinum) {
 	return CharacterData;
 }
 
-module.exports = { CharacterInfoMap, GetCharacterInfo, LevelUp, RaiseManaCircle, RaiseOmnicite, KaleidoStats, UnlockSharedSkill, CreateCharacterFromGift, CharacterIDByName, FillMissingStories, DrawCharacter, DrawCharacterCorrect }
+module.exports = { CharacterInfoMap, GetCharacterInfo, GenerateUnitStory, LevelUp, RaiseManaCircle, RaiseOmnicite, KaleidoStats, UnlockSharedSkill, CreateCharacterFromGift, CharacterIDByName, FillMissingStories, DrawCharacter, DrawCharacterCorrect }

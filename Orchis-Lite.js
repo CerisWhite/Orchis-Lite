@@ -3167,8 +3167,8 @@ Server.post([iOS_Version + "/dungeon_start/start", Android_Version + "/dungeon_s
 	res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportCharacter'][1] = [];
 	res.locals.UserSessionRecord['DungeonRecord']['DropTable'] = QuestMap.GetQuestDrops(QuestID);
 	if (SupportViewerID != 0) {
-		SupportSessionRecord = JSON.parse(fs.readFileSync('./Library/support/help_' + SupportViewerID));
-		SupportIndexRecord = JSON.parse(fs.readFileSync('./Library/support/save_' + SupportViewerID));
+		SupportSessionRecord = JSON.parse(fs.readFileSync('./Library/support/help_' + SupportViewerID + '.json'));
+		SupportIndexRecord = JSON.parse(fs.readFileSync('./Library/support/save_' + SupportViewerID + '.json'));
 		res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportPlayer'].push({'viewer_id': SupportViewerID, 'get_mana_point': 25, 'is_friend': 1, 'apply_send_status': 0});
 		res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportCharacter'] = DataManager.PopulateSupportData(SupportSessionRecord, SupportIndexRecord);
 		PartyListData[0]['support_data'] = res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportCharacter'][0]; }
@@ -3223,8 +3223,8 @@ Server.post([iOS_Version + "/dungeon_start/start_assign_unit", Android_Version +
 	res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportCharacter'][1] = [];
 	res.locals.UserSessionRecord['DungeonRecord']['DropTable'] = QuestMap.GetQuestDrops(QuestID);
 	if (SupportViewerID != 0) {
-		SupportSessionRecord = JSON.parse(fs.readFileSync('./Library/support/help_' + SupportViewerID));
-		SupportIndexRecord = JSON.parse(fs.readFileSync('./Library/support/save_' + SupportViewerID));
+		SupportSessionRecord = JSON.parse(fs.readFileSync('./Library/support/help_' + SupportViewerID + '.json'));
+		SupportIndexRecord = JSON.parse(fs.readFileSync('./Library/support/save_' + SupportViewerID + '.json'));
 		res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportPlayer'].push({'viewer_id': SupportViewerID, 'get_mana_point': 25, 'is_friend': 1, 'apply_send_status': 0});
 		res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportCharacter'] = DataManager.PopulateSupportData(SupportSessionRecord, SupportIndexRecord);
 		PartyListData[0]['support_data'] = res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportCharacter'][0]; }
@@ -3394,8 +3394,8 @@ Server.post([iOS_Version + "/wall_start/start", Android_Version + "/wall_start/s
 	res.locals.UserSessionRecord['Wall']['LastSupportCharacter'][0] = [];
 	res.locals.UserSessionRecord['Wall']['LastSupportCharacter'][1] = [];
 	if (SupportViewerID != 0) {
-		SupportSessionRecord = JSON.parse(fs.readFileSync('./Library/support/help_' + SupportViewerID));
-		SupportIndexRecord = JSON.parse(fs.readFileSync('./Library/support/save_' + SupportViewerID));
+		SupportSessionRecord = JSON.parse(fs.readFileSync('./Library/support/help_' + SupportViewerID + '.json'));
+		SupportIndexRecord = JSON.parse(fs.readFileSync('./Library/support/save_' + SupportViewerID + '.json'));
 		res.locals.UserSessionRecord['Wall']['LastSupportPlayer'].push({'viewer_id': SupportViewerID, 'get_mana_point': 25, 'is_friend': 1, 'apply_send_status': 0});
 		res.locals.UserSessionRecord['Wall']['LastSupportCharacter'] = DataManager.PopulateSupportData(SupportSessionRecord, SupportIndexRecord); 
 		PartyListData[0]['support_data'] = res.locals.UserSessionRecord['Wall']['LastSupportCharacter'][0]; }
@@ -3457,8 +3457,8 @@ Server.post([iOS_Version + "/wall_start/start_assign_unit", Android_Version + "/
 	res.locals.UserSessionRecord['Wall']['LastSupportCharacter'][0] = [];
 	res.locals.UserSessionRecord['Wall']['LastSupportCharacter'][1] = [];
 	if (SupportViewerID != 0) {
-		SupportSessionRecord = JSON.parse(fs.readFileSync('./Library/support/help_' + SupportViewerID));
-		SupportIndexRecord = JSON.parse(fs.readFileSync('./Library/support/save_' + SupportViewerID));
+		SupportSessionRecord = JSON.parse(fs.readFileSync('./Library/support/help_' + SupportViewerID + '.json'));
+		SupportIndexRecord = JSON.parse(fs.readFileSync('./Library/support/save_' + SupportViewerID + '.json'));
 		res.locals.UserSessionRecord['Wall']['LastSupportPlayer'].push({'viewer_id': SupportViewerID, 'get_mana_point': 25, 'is_friend': 1, 'apply_send_status': 0});
 		res.locals.UserSessionRecord['Wall']['LastSupportCharacter'] = DataManager.PopulateSupportData(SupportSessionRecord, SupportIndexRecord); 
 		PartyListData[0]['support_data'] = res.locals.UserSessionRecord['Wall']['LastSupportCharacter'][0]; }

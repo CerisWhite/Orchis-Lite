@@ -1,0 +1,18 @@
+[
+	{
+		"summon_id": 1020138,
+		"summon_type": 2,
+		"summon_cost": 100,
+		"start_time": 1691902800,
+		"end_time": 2721797200,
+		"campaign_type": 0,
+		"boost_rate": [],
+		"characters": [],
+		"dragons": [],
+		"wyrmprints": [],
+		"sigil": [],
+		"sigil_cost": 300,
+		"add_sigil_crystal": 0,
+		"add_sigil_stone": 0
+	}
+]

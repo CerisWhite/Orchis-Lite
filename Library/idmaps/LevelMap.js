@@ -205,7 +205,7 @@ const DragonLevel = [
 	{"level":115,"exp":2396720}, {"level":116,"exp":2556500}, {"level":117,"exp":2732280},
 	{"level":118,"exp":2925060}, {"level":119,"exp":3135840}, {"level":120,"exp":3365620}
 ]
-const DragonBondLevel = [
+const DragonBondLevel_1 = [
 	{"type":1,"level":1,"exp":0}, {"type":1,"level":2,"exp":80}, {"type":1,"level":3,"exp":240},
 	{"type":1,"level":4,"exp":420}, {"type":1,"level":5,"exp":620}, {"type":1,"level":6,"exp":840},
 	{"type":1,"level":7,"exp":1100}, {"type":1,"level":8,"exp":1400}, {"type":1,"level":9,"exp":1800},
@@ -215,7 +215,9 @@ const DragonBondLevel = [
 	{"type":1,"level":19,"exp":11300}, {"type":1,"level":20,"exp":12800}, {"type":1,"level":21,"exp":14400},
 	{"type":1,"level":22,"exp":16150}, {"type":1,"level":23,"exp":18050}, {"type":1,"level":24,"exp":20100},
 	{"type":1,"level":25,"exp":22300}, {"type":1,"level":26,"exp":24700}, {"type":1,"level":27,"exp":27300},
-	{"type":1,"level":28,"exp":30100}, {"type":1,"level":29,"exp":33100}, {"type":1,"level":30,"exp":36300},
+	{"type":1,"level":28,"exp":30100}, {"type":1,"level":29,"exp":33100}, {"type":1,"level":30,"exp":36300}
+]
+const DragonBondLevel_2 = [
 	{"type":2,"level":1,"exp":0}, {"type":2,"level":2,"exp":100}, {"type":2,"level":3,"exp":200},
 	{"type":2,"level":4,"exp":300}, {"type":2,"level":5,"exp":400}, {"type":2,"level":6,"exp":500},
 	{"type":2,"level":7,"exp":600}, {"type":2,"level":8,"exp":700}, {"type":2,"level":9,"exp":800},
@@ -296,10 +298,17 @@ function Dragon(Rarity, LimitBreak, EXPCount) {
 }
 
 function DragonBond(Type, EXPCount) {
+	let LevelIndex = 0;
 	switch(Type) {
 		case 1:
+			if (EXPCount > 36300) { return [30, 36300]; }
+			LevelIndex = DragonBondLevel_1.findIndex(x => x.exp > EXPCount) - 1;
+			return [DragonBondLevel_1[LevelIndex]['level'], EXPCount];
 			break;
 		case 2:
+			if (EXPCount > 2900) { return [30, 2900]; }
+			LevelIndex = DragonBondLevel_2.findIndex(x => x.exp > EXPCount) - 1;
+			return [DragonBondLevel_2[LevelIndex]['level'], EXPCount];
 			break;
 	}
 }

@@ -7,17 +7,17 @@ This server only allows one user (one account, one save file, one session record
 To use:
 - Extract the Quest.zip file into a `Quest` folder.
 - `npm install`
-- From here, either use `pkg ./Orchis-lite.js` to create the binary for your (target) device, or run it directly with `node ./Orchis-lite.js`
+- From here, run with `node ./Orchis-Lite.js`
 
 ## This may not be fully functional as a lot of code has changed. Please feel free to open issues for non-functional code if any is found.
 
 ---
 
 What doesn't work in this version:
-- Events
 - Kaleidoscape
 - Suggestions
 - Guilds
+- Co-Op
 
 Additionally:
 - All of my admin utilities are removed

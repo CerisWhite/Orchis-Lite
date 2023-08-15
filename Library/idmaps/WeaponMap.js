@@ -1,8 +1,7 @@
 const fs = require('fs');
-const path = require('path');
-const WeaponUpgradeInfoMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'WeaponUpgradeInfoMap.json')));
-const WeaponLevelInfoMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'WeaponLevelInfoMap.json')));
-const WeaponPassiveInfoMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'WeaponPassiveInfoMap.json')));
+const WeaponUpgradeInfoMap = JSON.parse(fs.readFileSync('./Library/idmaps/WeaponMap/WeaponUpgradeInfoMap.json'));
+const WeaponLevelInfoMap = JSON.parse(fs.readFileSync('./Library/idmaps/WeaponMap/WeaponLevelInfoMap.json'));
+const WeaponPassiveInfoMap = JSON.parse(fs.readFileSync('./Library/idmaps/WeaponMap/WeaponPassiveInfoMap.json'));
 
 var WeaponInfoMap = {
   "30119901": {

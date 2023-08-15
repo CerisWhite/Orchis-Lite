@@ -1,10 +1,15 @@
 // DataManager.js
 const QuestMap = require('../idmaps/QuestMap.js');
 const CharacterMap = require('../idmaps/CharacterMap.js');
+const WeaponMap = require('../idmaps/WeaponMap.js');
 const DragonMap = require('../idmaps/DragonMap.js');
 const ItemMap = require('../idmaps/ItemMap.js');
 const WyrmprintMap = require('../idmaps/WyrmprintMap.js');
 const LevelMap = require('../idmaps/LevelMap.js');
+const MissionMap = require('../idmaps/MissionMap.js');
+
+const fs = require('fs');
+const LoginBonusMap = JSON.parse(fs.readFileSync('./Library/event/LoginBonusMap.json'));
 
 function IsSkillOneOrTwo(CharacterID) {
 	const SkillNumber = CharacterMap.GetCharacterInfo(CharacterID, "shared_skill_number");
@@ -93,7 +98,97 @@ function GetMissionNotice(UserSessionRecord) {
 	}
 	return Data;
 }
-
+function GenerateSummonOdds(BannerList) {
+	let Data = [];
+	for (let x in BannerList) {
+		let Template = {
+			'summon_id': BannerList[x]['summon_id'],
+			'odds': {
+				'required_count_to_next': 999,
+				'normal': {
+					'rarity_list': [
+						{'rarity': 5, 'total_rate': "5.00%"},
+						{'rarity': 4, 'total_rate': "16.00%"},
+						{'rarity': 3, 'total_rate': "79.00%"}
+					],
+					'rarity_group_list': [],
+					'unit': {
+						'chara_odds_list': [
+							{'pickup': false, 'rarity': 5, 'unit_list': []},
+							{'pickup': false, 'rarity': 4, 'unit_list': []},
+							{'pickup': false, 'rarity': 3, 'unit_list': []}
+						],
+						'dragon_odds_list': [
+							{'pickup': false, 'rarity': 5, 'unit_list': []},
+							{'pickup': false, 'rarity': 4, 'unit_list': []},
+							{'pickup': false, 'rarity': 3, 'unit_list': []}
+						]
+					}
+				},
+				'guarantee': {
+					'rarity_list': [],
+					'rarity_group_list': [],
+					'unit': {
+						'chara_odds_list': [],
+						'dragon_odds_list': []
+					}
+				}
+			},
+			'prize_odds': {
+				'normal': [],
+				'guarantee': []
+			}
+		}
+		for (let y in BannerList[x]['characters']) {
+			const Current = BannerList[x]['characters'][y];
+			const Rarity = CharacterMap.CharacterInfoMap[String(Current)]['rarity'];
+			let IsBoosted = false; if (BannerList[x]['boost_rate'].includes(Current)) { IsBoosted = true; }
+			let OddsTemplate = {}
+			switch(Rarity) {
+				case 5:
+					if (IsBoosted) { OddsTemplate = {'id': Current, 'rate': "0.600%"}; }
+					else { OddsTemplate = {'id': Current, 'rate': "0.021%"}; }
+					Template['odds']['normal']['unit']['chara_odds_list'][0]['unit_list'].push(OddsTemplate);
+					break;
+				case 4:
+					if (IsBoosted) { OddsTemplate = {'id': Current, 'rate': "2.00%"}; }
+					else { OddsTemplate = {'id': Current, 'rate': "0.194%"}; }
+					Template['odds']['normal']['unit']['chara_odds_list'][1]['unit_list'].push(OddsTemplate);
+					break;
+				case 3:
+					if (IsBoosted) { OddsTemplate = {'id': Current, 'rate': "5.00%"}; }
+					else { OddsTemplate = {'id': Current, 'rate': "2.494%"}; }
+					Template['odds']['normal']['unit']['chara_odds_list'][2]['unit_list'].push(OddsTemplate);
+					break;
+			}
+		}
+		for (let z in BannerList[x]['dragons']) {
+			const Current = BannerList[x]['dragons'][z];
+			const Rarity = DragonMap.DragonInfoMap[String(Current)]['rarity'];
+			let IsBoosted = false; if (BannerList[x]['boost_rate'].includes(Current)) { IsBoosted = true; }
+			let OddsTemplate = {}
+			switch(Rarity) {
+				case 5:
+					if (IsBoosted) { OddsTemplate = {'id': Current, 'rate': "0.600%"}; }
+					else { OddsTemplate = {'id': Current, 'rate': "0.046%"}; }
+					Template['odds']['normal']['unit']['dragon_odds_list'][0]['unit_list'].push(OddsTemplate);
+					break;
+				case 4:
+					if (IsBoosted) { OddsTemplate = {'id': Current, 'rate': "5.00%"}; }
+					else { OddsTemplate = {'id': Current, 'rate': "0.745%"}; }
+					Template['odds']['normal']['unit']['dragon_odds_list'][1]['unit_list'].push(OddsTemplate);
+					break;
+				case 3:
+					if (IsBoosted) { OddsTemplate = {'id': Current, 'rate': "5.00%"}; }
+					else { OddsTemplate = {'id': Current, 'rate': "2.106%"}; }
+					Template['odds']['normal']['unit']['dragon_odds_list'][2]['unit_list'].push(OddsTemplate);
+					break;
+			}
+		}
+		Data.push(Template);
+	}
+	return Data;
+}
 function KeyIDByTicket(ID) {
 	let TicketKeyID = 0;
 	switch(ID) {
@@ -111,9 +206,11 @@ function KeyIDByTicket(ID) {
 	return TicketKeyID;
 }
 
-function DungeonRecord(UserSessionRecord, UserIndexRecord, DungeonKey) {
-	var GrowthTable = [];
-	var FullGrowthTable = [];
+function DungeonRecord(UserSessionRecord, UserIndexRecord, DungeonKey, PlayData) {
+	let GrowthTable = [];
+	let FullGrowthTable = [];
+	let FriendshipTable = [];
+	let LimitRewardList = [];
 	let PlayerEXP = 250;
 	let DungeonEXP = 240;
 	for (let i in Object.keys(UserSessionRecord['DungeonRecord']['LastDungeonPartyData'])) {
@@ -132,12 +229,34 @@ function DungeonRecord(UserSessionRecord, UserIndexRecord, DungeonKey) {
 				UserIndexRecord['chara_list'][CharacterIndex]['exp'] = NewData[1];
 				FullGrowthTable.push(UserIndexRecord['chara_list'][CharacterIndex]);
 			} else { GrowthTable.push({'chara_id': CharacterData['chara_id'], 'take_exp': 0}); }
+			if (EventMap.EventFriendList[String(CharacterData['chara_id'])] != undefined) {
+				const FriendEventID = EventMap.EventFriendList[String(CharacterData['chara_id'])]['event_id'];
+				if ((UserSessionRecord['Event']['Raid'][String(FriendEventID)] != undefined) &&
+					(UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0] != undefined) &&
+					(UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] < 500)) {
+					const AddPoints = 6;
+					let TotalPoints = UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] + AddPoints;
+					if (TotalPoints > 500) {
+						TotalPoints = 500;
+						UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] = 500;
+						UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['is_temporary'] = 0;
+					}
+					else { UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] = TotalPoints; }
+					const FriendTemplate = {
+						'chara_id': CharacterData['chara_id'],
+						'add_point': AddPoints,
+						'total_point': TotalPoints,
+						'is_temporary': UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['is_temporary']
+					}
+					FriendshipTable.push(FriendTemplate);
+				}
+			}
 		}
 	}
-	const DropTable = QuestMap.GetQuestDrops(String(UserSessionRecord['DungeonRecord']['LastQuestID']));
-	const ParsedDrops = ItemParser(DropTable[0], UserSessionRecord, UserIndexRecord, "plain");
+	const DropTable = UserSessionRecord['DungeonRecord']['DropTable'];
+	const ParsedDrops = ItemParser(DropTable[0], UserSessionRecord, UserIndexRecord, "plain", UserSessionRecord['DungeonRecord']['LastQuestID']);
 	UserSessionRecord = ParsedDrops[0]; UserIndexRecord = ParsedDrops[1];
-	let UpdateData = ParsedDrops[2]; let NewEntityList = ParsedDrops[3];
+	let UpdateData = ParsedDrops[2]; let EntityList = ParsedDrops[3];
 	UserIndexRecord['user_data']['coin'] += DropTable[1];
 	UserIndexRecord['user_data']['mana_point'] += DropTable[2];
 	UserIndexRecord['user_data']['crystal'] += DropTable[3];
@@ -145,7 +264,7 @@ function DungeonRecord(UserSessionRecord, UserIndexRecord, DungeonKey) {
 	if (UserIndexRecord['user_data']['mana_point'] > 3000000000) { UserIndexRecord['user_data']['mana_point'] = 3000000000; }
 	if (UserIndexRecord['user_data']['crystal'] > 3000000000) { UserIndexRecord['user_data']['crystal'] = 3000000000 }
 	UpdateData['diamond_data'] = { 'free_diamond': 0, 'paid_diamond': UserSessionRecord['Diamantium'] }
-	var JSONDict = {
+	let JSONDict = {
 		'data_headers': {
 			'result_code': 1
 		},
@@ -153,14 +272,14 @@ function DungeonRecord(UserSessionRecord, UserIndexRecord, DungeonKey) {
 			'time_attack_ranking_data': [],
 			'ingame_result_data': {
 				'dungeon_key': DungeonKey, // Also stored in SessionRecord. Check if match and only give rewards then?
-				'play_type': 1, // QuestMap.GetQuestTypeID(QuestID)
+				'play_type': UserSessionRecord['DungeonRecord']['LastDungeonPlayType'], // QuestMap.GetQuestTypeID(QuestID)
 				'quest_id': UserSessionRecord['DungeonRecord']['LastQuestID'],
 				'reward_record': {
 					'drop_all':	DropTable[0],
 					'first_clear_set': [],
 					'quest_bonus_list': [],
 					'reborn_bonus': [],
-					'weekly_limit_reward_list': [],
+					'weekly_limit_reward_list': LimitRewardList,
 					'challenge_quest_bonus_list': [],
 					'campaign_extra_reward_list': [],
 					'shop_quest_bonus_factor': 0,
@@ -182,7 +301,7 @@ function DungeonRecord(UserSessionRecord, UserIndexRecord, DungeonKey) {
 					'bonus_factor': 1.0,
 					'mana_bonus_factor': 1.0,
 					'chara_grow_record': GrowthTable,
-					'chara_friendship_list': []
+					'chara_friendship_list': FriendshipTable
 				},
 				'start_time': UserSessionRecord['DungeonRecord']['LastDungeonStartedAt'],
 				'end_time': 0,
@@ -200,31 +319,34 @@ function DungeonRecord(UserSessionRecord, UserIndexRecord, DungeonKey) {
 				'scoring_enemy_point_list': [],
 				'score_mission_success_list': [],
 				'event_passive_up_list': [],
-				'clear_time': Math.floor(Date.now() / 1000) - UserSessionRecord['DungeonRecord']['LastDungeonStartedAt'],
+				'clear_time': PlayData['time'],
 				'is_best_clear_time': 0,
-				'converted_entity_list': [],
+				'converted_entity_list': EntityList['converted_entity_list'],
 				'dungeon_skip_type': 0,
 				'total_play_damage': 0
 			},
 			'event_damage_ranking': [],
 			'repeat_data': [],
 			'update_data_list': UpdateData,
-			'entity_result': {
-				'converted_entity_list': []
-			}
+			'entity_result': EntityList
 		}
 	}
+	if (IsMulti == true) { delete JSONDict['data']['repeat_data']; }
 	const PlayerLevel = LevelMap.Player(UserIndexRecord['user_data']['exp'] + PlayerEXP);
 	const CurrentLevel = UserIndexRecord['user_data']['level'];
 	UserIndexRecord['user_data']['level'] = PlayerLevel[0];
 	UserIndexRecord['user_data']['exp'] = PlayerLevel[1];
 	if (PlayerLevel[0] > CurrentLevel) {
-		UserIndexRecord['user_data']['stamina_single'] = PlayerLevel[2];
-		// Wyrmite Reward (entity get)??
+		if (UserIndexRecord['user_data']['stamina_single'] < PlayerLevel[2]) { UserIndexRecord['user_data']['stamina_single'] = PlayerLevel[2]; }
+		const LevelUpCount = PlayerLevel[0] - CurrentLevel;
+		const WyrmiteCount = 50 * LevelUpCount;
+		UserIndexRecord['user_data']['crystal'] += WyrmiteCount;
+		JSONDict['data']['entity_result']['new_entity_get_list'].push({'entity_type': 23, 'entity_id': 0, 'entity_quantity': WyrmiteCount});
+		UserIndexRecord = FacilityCheck(PlayerLevel[0], CurrentLevel, UserIndexRecord);
 	}
 	JSONDict['data']['update_data_list']['user_data'] = UserIndexRecord['user_data'];
 	JSONDict['data']['update_data_list']['chara_list'] = FullGrowthTable;
-	var FinalQuestData = [{
+	const FinalQuestData = [{
 		'quest_id': UserSessionRecord['DungeonRecord']['LastQuestID'],
 		'state': 3,
 		'is_mission_clear_1': 1,
@@ -239,15 +361,48 @@ function DungeonRecord(UserSessionRecord, UserIndexRecord, DungeonKey) {
 		'best_clear_time': Math.floor(Date.now() / 1000) - UserSessionRecord['DungeonRecord']['LastDungeonStartedAt']
 	}]
 	JSONDict['data']['update_data_list']['quest_list'] = FinalQuestData;
-	var QuestIndex = UserIndexRecord.quest_list.findIndex(x => x.quest_id == UserSessionRecord['DungeonRecord']['LastQuestID']);
+	const QuestIndex = UserIndexRecord.quest_list.findIndex(x => x.quest_id == UserSessionRecord['DungeonRecord']['LastQuestID']);
 	if (QuestIndex != -1) { UserIndexRecord['quest_list'][QuestIndex] = FinalQuestData[0]; }
 	else { UserIndexRecord['quest_list'].push(FinalQuestData[0]); }
 	// Include mission updates sometime
+	const QuestBase = String(UserSessionRecord['DungeonRecord']['LastQuestID']).slice(0, 3);
+	if (QuestBase == 204) {
+		const QuestID = UserSessionRecord['DungeonRecord']['LastQuestID'];
+		const EventID = String(QuestID).slice(0, 5);
+		const QuestSuffix = String(QuestID).slice(-3);
+		if (QuestSuffix == 302 || QuestSuffix == 501 || QuestSuffix == 602 || QuestSuffix == 604 || QuestSuffix == 606) {
+			UserSessionRecord['Event']['Raid'][EventID]['UserData']['advent_item_quantity_1'] -= 5;
+		}
+		else if (QuestSuffix == 301) {
+			UserSessionRecord['Event']['Raid'][EventID]['UserData']['advent_item_quantity_1'] -= 3;
+		}
+		else if (QuestSuffix == 401) {
+			UserSessionRecord['Event']['Raid'][EventID]['UserData']['advent_item_quantity_2'] -= 1;
+		}
+		
+		if (QuestSuffix == 501 && QuestIndex == -1) {
+			UserSessionRecord['Event']['Raid'][EventID]['Passive'] = {
+				'event_id': parseInt(EventID),
+				'event_passive_grow_list': [
+					{'passive_id': parseInt(EventID + "04"), 'progress': 1},
+					{'passive_id': parseInt(EventID + "05"), 'progress': 1},
+					{'passive_id': parseInt(EventID + "06"), 'progress': 1},
+					{'passive_id': parseInt(EventID + "07"), 'progress': 1},
+					{'passive_id': parseInt(EventID + "08"), 'progress': 1}
+				]
+			}
+			JSONDict['data']['ingame_result_data']['event_passive_up_list'] = [ UserSessionRecord['Event']['Raid'][EventID]['Passive'] ];
+			JSONDict['data']['update_data_list']['event_passive_list'] = [ UserSessionRecord['Event']['Raid'][EventID]['Passive'] ];
+		}
+	}
+	UserSessionRecord = MissionMap.CheckMedalCompletion(UserSessionRecord['DungeonRecord']['LastQuestID'], GrowthTable, UserSessionRecord);
 	return [JSONDict, UserIndexRecord, UserSessionRecord];
 }
 function DungeonSkipRecord(UserSessionRecord, UserIndexRecord, DungeonKey, PlayCount) {
-	var GrowthTable = [];
-	var FullGrowthTable = [];
+	let GrowthTable = [];
+	let FullGrowthTable = [];
+	let FriendshipTable = [];
+	let LimitRewardList = [];
 	let PlayerEXP = 200 * PlayCount;
 	let DungeonEXP = 240 * PlayCount;
 	for (let i in Object.keys(UserSessionRecord['DungeonRecord']['LastDungeonPartyData'])) {
@@ -266,12 +421,34 @@ function DungeonSkipRecord(UserSessionRecord, UserIndexRecord, DungeonKey, PlayC
 				UserIndexRecord['chara_list'][CharacterIndex]['exp'] = NewData[1];
 				FullGrowthTable.push(UserIndexRecord['chara_list'][CharacterIndex]);
 			} else { GrowthTable.push({'chara_id': CharacterData['chara_id'], 'take_exp': 0}); }
+			if (EventMap.EventFriendList[String(CharacterData['chara_id'])] != undefined) {
+				const FriendEventID =  EventMap.EventFriendList[String(CharacterData['chara_id'])]['event_id'];
+				if ((UserSessionRecord['Event']['Raid'][String(FriendEventID)] != undefined) &&
+					(UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0] != undefined) &&
+					(UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] < 500)) {
+					const AddPoints = 6 * PlayCount;
+					let TotalPoints = UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] + AddPoints;
+					if (TotalPoints > 500) {
+						TotalPoints = 500
+						UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] = 500;
+						UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['is_temporary'] = 0;
+					}
+					else { UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] = TotalPoints; }
+					const FriendTemplate = {
+						'chara_id': CharacterData['chara_id'],
+						'add_point': AddPoints,
+						'total_point': TotalPoints,
+						'is_temporary': UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['is_temporary']
+					}
+					FriendshipTable.push(FriendTemplate);
+				}
+			}
 		}
 	}
 	const DropTable = QuestMap.GetQuestDropsSkip(String(UserSessionRecord['DungeonRecord']['LastQuestID']), PlayCount);
-	const ParsedDrops = ItemParser(DropTable[0], UserSessionRecord, UserIndexRecord, "plain");
+	const ParsedDrops = ItemParser(DropTable[0], UserSessionRecord, UserIndexRecord, "plain", UserSessionRecord['DungeonRecord']['LastQuestID']);
 	UserSessionRecord = ParsedDrops[0]; UserIndexRecord = ParsedDrops[1];
-	let UpdateData = ParsedDrops[2]; let NewEntityList = ParsedDrops[3];
+	let UpdateData = ParsedDrops[2]; let EntityList = ParsedDrops[3];
 	UserIndexRecord['user_data']['coin'] += DropTable[1];
 	UserIndexRecord['user_data']['mana_point'] += DropTable[2];
 	UserIndexRecord['user_data']['crystal'] += DropTable[3];
@@ -279,7 +456,7 @@ function DungeonSkipRecord(UserSessionRecord, UserIndexRecord, DungeonKey, PlayC
 	if (UserIndexRecord['user_data']['mana_point'] > 3000000000) { UserIndexRecord['user_data']['mana_point'] = 3000000000; }
 	if (UserIndexRecord['user_data']['crystal'] > 3000000000) { UserIndexRecord['user_data']['crystal'] = 3000000000 }
 	UpdateData['diamond_data'] = { 'free_diamond': 0, 'paid_diamond': UserSessionRecord['Diamantium'] }
-	var JSONDict = {
+	let JSONDict = {
 		'data_headers': {
 			'result_code': 1
 		},
@@ -294,7 +471,7 @@ function DungeonSkipRecord(UserSessionRecord, UserIndexRecord, DungeonKey, PlayC
 					'first_clear_set': [],
 					'quest_bonus_list': [],
 					'reborn_bonus': [],
-					'weekly_limit_reward_list': [],
+					'weekly_limit_reward_list': LimitRewardList,
 					'challenge_quest_bonus_list': [],
 					'campaign_extra_reward_list': [],
 					'shop_quest_bonus_factor': 0,
@@ -316,7 +493,7 @@ function DungeonSkipRecord(UserSessionRecord, UserIndexRecord, DungeonKey, PlayC
 					'bonus_factor': 1.0,
 					'mana_bonus_factor': 1.0,
 					'chara_grow_record': GrowthTable,
-					'chara_friendship_list': []
+					'chara_friendship_list': FriendshipTable
 				},
 				'start_time': UserSessionRecord['DungeonRecord']['LastDungeonStartedAt'],
 				'end_time': 0,
@@ -336,16 +513,14 @@ function DungeonSkipRecord(UserSessionRecord, UserIndexRecord, DungeonKey, PlayC
 				'event_passive_up_list': [],
 				'clear_time': Math.floor(Date.now() / 1000) - UserSessionRecord['DungeonRecord']['LastDungeonStartedAt'],
 				'is_best_clear_time': 0,
-				'converted_entity_list': [],
+				'converted_entity_list': EntityList['converted_entity_list'],
 				'dungeon_skip_type': 0,
 				'total_play_damage': 0
 			},
 			'event_damage_ranking': [],
 			'repeat_data': [],
 			'update_data_list': UpdateData,
-			'entity_result': {
-				'converted_entity_list': []
-			}
+			'entity_result': EntityList
 		}
 	}
 	const PlayerLevel = LevelMap.Player(UserIndexRecord['user_data']['exp'] + PlayerEXP);
@@ -353,12 +528,16 @@ function DungeonSkipRecord(UserSessionRecord, UserIndexRecord, DungeonKey, PlayC
 	UserIndexRecord['user_data']['level'] = PlayerLevel[0];
 	UserIndexRecord['user_data']['exp'] = PlayerLevel[1];
 	if (PlayerLevel[0] > CurrentLevel) {
-		UserIndexRecord['user_data']['stamina_single'] = PlayerLevel[2];
-		// Wyrmite Reward??
+		if (UserIndexRecord['user_data']['stamina_single'] < PlayerLevel[2]) { UserIndexRecord['user_data']['stamina_single'] = PlayerLevel[2]; }
+		const LevelUpCount = PlayerLevel[0] - CurrentLevel;
+		const WyrmiteCount = 50 * LevelUpCount;
+		UserIndexRecord['user_data']['crystal'] += WyrmiteCount;
+		JSONDict['data']['entity_result']['new_entity_get_list'].push({'entity_type': 23, 'entity_id': 0, 'entity_quantity': WyrmiteCount});
+		UserIndexRecord = FacilityCheck(PlayerLevel[0], CurrentLevel, UserIndexRecord);
 	}
 	JSONDict['data']['update_data_list']['user_data'] = UserIndexRecord['user_data'];
 	JSONDict['data']['update_data_list']['chara_list'] = FullGrowthTable;
-	var FinalQuestData = [{
+	const FinalQuestData = [{
 		'quest_id': UserSessionRecord['DungeonRecord']['LastQuestID'],
 		'state': 3,
 		'is_mission_clear_1': 1,
@@ -373,12 +552,13 @@ function DungeonSkipRecord(UserSessionRecord, UserIndexRecord, DungeonKey, PlayC
 		'best_clear_time': Math.floor(Date.now() / 1000) - UserSessionRecord['DungeonRecord']['LastDungeonStartedAt']
 	}]
 	JSONDict['data']['update_data_list']['quest_list'] = FinalQuestData;
-	var QuestIndex = UserIndexRecord.quest_list.findIndex(x => x.quest_id == UserSessionRecord['DungeonRecord']['LastQuestID']);
+	const QuestIndex = UserIndexRecord.quest_list.findIndex(x => x.quest_id == UserSessionRecord['DungeonRecord']['LastQuestID']);
 	if (QuestIndex != -1) { UserIndexRecord['quest_list'][QuestIndex] = FinalQuestData[0]; }
 	else { UserIndexRecord['quest_list'].push(FinalQuestData[0]); }
 	// Include mission updates sometime
 	return [JSONDict, UserIndexRecord, UserSessionRecord];
 }
+
 function QuestStep(QuestID) {
 	var JSONDict = { 'data_headers': { 'result_code': 1 }, 'data': {
 		'odds_info': QuestMap.GetQuestInfo(QuestID, "odds_info")
@@ -559,72 +739,98 @@ function WallRecord(UserSessionRecord, UserIndexRecord, WallID) {
 	return [JSONDict, UserIndexRecord];
 }
 
-function LoginBonusData(UserIndexRecord, UserSessionRecord) {
-	UserIndexRecord['user_data']['crystal'] += 50;
-	UserIndexRecord['user_data']['last_login_time'] = Math.floor(Date.now() / 1000);
-	UserSessionRecord['SummonRecord']['ItemCount'] = 0;
-	UserSessionRecord['SummonRecord']['FreeTenfoldCount'] = 1;
-	UserSessionRecord['SummonRecord']['DailyLimitCount'] = 1;
-	var JSONDict = {
+function FacilityCheck(NewLevel, OldLevel, UserIndexRecord) {
+	if (NewLevel > 40 && OldLevel < 40) {
+		
+	}
+	if (NewLevel > 45 && OldLevel < 45) {
+		
+	}
+	if (NewLevel > 50 && OldLevel < 50) {
+		
+	}
+	if (NewLevel > 55 && OldLevel < 55) {
+		
+	}
+	if (NewLevel > 60 && OldLevel < 60) {
+		
+	}
+	return UserIndexRecord;
+}
+
+function LoginBonusData(UserIndexRecord, UserSessionRecord, DailyDragonItem) {
+	let UpdateData = {}; let EntityList = {};
+	let LoginBonusList = [];
+	if (UserSessionRecord['LoginBonus']['Display'] == true) {
+		let RewardDay = parseInt(String(UserSessionRecord['LoginBonus']['17']['DayCount']).slice(-1));
+		if (RewardDay == 0) { RewardDay = 10; }
+		const DailyRewardData = LoginBonusMap["17"][String(RewardDay)];
+		const DailyBonus = {
+			'reward_code': 0,
+			'login_bonus_id': 17,
+			'total_login_day': UserSessionRecord['LoginBonus']['17']['DayCount'],
+			'reward_day': RewardDay,
+			'entity_type': DailyRewardData['entity_type'],
+			'entity_id': DailyRewardData['entity_id'],
+			'entity_quantity': DailyRewardData['entity_quantity'],
+			'entity_level': DailyRewardData['entity_level'],
+			'entity_limit_break_count': DailyRewardData['entity_limit_break_count']
+		}
+		if ((UserIndexRecord['user_data']['quest_skip_point'] + 12) > 400) { UserIndexRecord['user_data']['quest_skip_point'] = 400; }
+		else { UserIndexRecord['user_data']['quest_skip_point'] += 12; }
+		UserSessionRecord['LoginBonus']['17']['DayCount'] += 1;
+		LoginBonusList.push(DailyBonus);
+		
+		UserSessionRecord['LoginBonus']['Display'] = false;
+		let Parsed = ItemParser(LoginBonusList, UserSessionRecord, UserIndexRecord, "entity");
+		UserSessionRecord = Parsed[0];
+		UserIndexRecord = Parsed[1];
+		UpdateData = Parsed[2]; EntityList = Parsed[3];
+		UpdateData['user_data'] = UserIndexRecord['user_data'];
+		UpdateData['diamond_data'] = { 'free_diamond': 0, 'paid_diamond': UserSessionRecord['Diamantium'] };
+		UpdateData['present_notice'] = { 'present_count': UserSessionRecord['GiftRecord']['GiftNormalList'].length, 'present_limit_count': UserSessionRecord['GiftRecord']['GiftLimitedList'].length };
+		UserIndexRecord['user_data']['crystal'] += 50;
+		UserIndexRecord['user_data']['last_login_time'] = Math.floor(Date.now() / 1000);
+		UserSessionRecord['SummonRecord']['ItemCount'] = 0;
+		UserSessionRecord['SummonRecord']['FreeTenfoldCount'] += 1;
+		UserSessionRecord['SummonRecord']['DailyLimitCount'] = 1;
+		UserSessionRecord['Kaleidoscape']['RecoveryCount'] = 0;
+		UserSessionRecord['FortData']['DragonGiftList'] = [
+			{
+				"dragon_gift_id": 10001,
+				"price": 0,
+				"is_buy": 1
+			},
+			{
+				"dragon_gift_id": 10002,
+				"price": 1500,
+				"is_buy": 1
+			},
+			{
+				"dragon_gift_id": 10003,
+				"price": 4000,
+				"is_buy": 1
+			},
+			{
+				"dragon_gift_id": 10004,
+				"price": 8000,
+				"is_buy": 1
+			},
+			{
+				"dragon_gift_id": DailyDragonItem,
+				"price": 12000,
+				"is_buy": 0
+			},
+		]
+	}
+	UpdateData['diamond_data'] = { 'free_diamond': 0, 'paid_diamond': UserSessionRecord['Diamantium'] };
+	const JSONDict = {
 		'data_headers': {
 			'result_code': 1
 		},
 		'data': {
-			/*
-				'support_reward': {
-				'serve_count': 50,
-				'mana_point': 520
-			},
-			'login_bonus_list': [
-				{
-					'reward_code': 0,
-					'login_bonus_id': 17,
-					'total_login_day': 545,
-					'reward_day': 5,
-					'entity_type': 4,
-					'entity_id': 0,
-					'entity_quantity': 30000,
-					'entity_level': 0,
-					'entity_limit_break_count': 0
-				},
-				{
-					'reward_code': 0,
-					'login_bonus_id': 74,
-					'total_login_day': 7,
-					'reward_day': 7,
-					'entity_type': 8,
-					'entity_id': 112002001,
-					'entity_quantity': 1,
-					'entity_level': 0,
-					'entity_limit_break_count': 0
-				}
-			],
-			'login_lottery_reward_list': [
-				{
-					'login_lottery_id': 1000003,
-					'entity_type': 14,
-					'entity_id': 0,
-					'entity_quantity': 1000,
-					'is_pickup': 0,
-					'is_guaranteed': 0
-				}
-			],
-			'dragon_contact_free_gift_count': 1,
-			'monthly_wall_receive_list': [
-				{
-					'quest_group_id': 21601,
-					'is_receive_reward': 2
-				}
-			],
-			'penalty_data': [
-			],
-			'exchange_summom_point_list': [
-			],
-			'before_exchange_summon_item_quantity': 0,
-			'server_time': Math.floor(Date.now() / 1000),
-			*/
 			'support_reward': {},
-			'login_bonus_list': [],
+			'login_bonus_list': LoginBonusList,
 			'login_lottery_reward_list': [],
 			'dragon_contact_free_gift_count': 0,
 			'monthly_wall_receive_list': [],
@@ -634,17 +840,14 @@ function LoginBonusData(UserIndexRecord, UserSessionRecord) {
 			],
 			'before_exchange_summon_item_quantity': 0,
 			'server_time': Math.floor(Date.now() / 1000),
-			'update_data_list': {
-				'user_data': UserIndexRecord['user_data'],
-				'diamond_data': { 'free_diamond': 0, 'paid_diamond': UserSessionRecord['Diamantium'] },
-				'present_notice': { 'present_count': UserSessionRecord['GiftRecord']['GiftNormalList'].length, 'present_limit_count': UserSessionRecord['GiftRecord']['GiftLimitedList'].length }
-			}
+			'update_data_list': UpdateData,
+			'entity_list': EntityList
 		}
 	}
 	return [JSONDict, UserIndexRecord, UserSessionRecord];
 }
-			
-function MissionList(UserSessionRecord) {
+
+function MissionList(UserSessionRecord, DefaultMissionList) {
 	var JSONDict = { 'data_headers': { 'result_code': 1 }, 'data': {
 		'normal_mission_list': [],
 		'daily_mission_list': [],
@@ -665,7 +868,6 @@ function MissionList(UserSessionRecord) {
 			'drill_mission_notice': UserSessionRecord['QuestNotice']['DrillMission'],
 			'album_mission_notice': UserSessionRecord['QuestNotice']['AlbumMission']
 		},
-		/*
 		'current_main_story_mission': {
 			'main_story_mission_group_id': 11,
 			'main_story_mission_state_list': [
@@ -691,37 +893,33 @@ function MissionList(UserSessionRecord) {
 				}
 			]
 		},
-		*/
-		'current_main_story_mission': [],
 		'special_mission_purchased_group_id_list': []	
 	}}
 	return JSONDict;
 }
-function MyPageInfo(UserSessionRecord, QuestRotation) { 
-	var JSONDict = { 'data_headers': { 'result_code': 1 }, 'data': {
-		'user_summon_list': [{
-				"summon_id": 1010001,
-				"summon_count": 0,
-				"campaign_type": 0,
-				"free_count_rest": 0,
-				"is_beginner_campaign": 0,
-				"beginner_campaign_count_rest": 0,
-				"consecution_campaign_count_rest": 0
-			}],
+function MyPageInfo(UserSessionRecord, QuestRotationSet) {
+	let QuestRotation = [];
+	const RightNow = Math.floor(Date.now()/1000)
+	const JSONDict = { 'data_headers': { 'result_code': 1 }, 'data': {
+		'user_summon_list': UserSessionRecord['SummonRecord']['UserSummonData'],
 		'is_shop_notification': 0,
 		'is_view_start_dash': 0,
 		'is_view_dream_select': 0,
 		'quest_event_schedule_list': [],
-		'quest_schedule_detail_list': QuestRotation,
+		'quest_schedule_detail_list': QuestRotationSet,
 		'repeat_data': [],
 		'is_receive_event_damage_reward': 0
 	}}
 	return JSONDict;
 }
 
-function ItemParser(ItemTable, UserSessionRecord, UserIndexRecord, TableType) {
+function ItemParser(ItemTable, UserSessionRecord, UserIndexRecord, TableType, QuestID) {
 	let UpdateData = {};
-	let NewEntityList = [];
+	let EntityList = {
+		'new_entity_get_list': [],
+		'converted_entity_list': [],
+		'over_discard_entity_list': []
+	};
 	TypeName = "type"; IDName = "id"; AmountName = "quantity";
 	switch(TableType) {
 		case "destination":
@@ -741,7 +939,7 @@ function ItemParser(ItemTable, UserSessionRecord, UserIndexRecord, TableType) {
 					if (UpdateData['chara_list'] == undefined) { UpdateData['chara_list'] = []; }
 					UpdateData['chara_list'].push(CharacterMap.CreateCharacterFromGift(ItemTable[y][IDName], 1));
 					UserIndexRecord['chara_list'].push(CharacterMap.CreateCharacterFromGift(ItemTable[y][IDName], 1));
-					NewEntityList.push({ 'entity_type': 1, 'entity_id': ItemTable[y][IDName] });
+					EntityList['new_entity_get_list'].push({ 'entity_type': 1, 'entity_id': ItemTable[y][IDName] });
 					const CharacterElement = CharacterMap.GetCharacterInfo(ItemTable[y][IDName], 'elemental_type');
 					const CharacterBonusIndex = UserIndexRecord['fort_bonus_list']['chara_bonus_by_album'].findIndex(x => x.elemental_type == CharacterElement);
 					UserIndexRecord['fort_bonus_list']['chara_bonus_by_album'][CharacterBonusIndex]['hp'] += 0.1;
@@ -785,7 +983,7 @@ function ItemParser(ItemTable, UserSessionRecord, UserIndexRecord, TableType) {
 						UserIndexRecord['fort_bonus_list']['dragon_bonus_by_album'][DragonBonusIndex]['hp'] += 0.1;
 						UserIndexRecord['fort_bonus_list']['dragon_bonus_by_album'][DragonBonusIndex]['attack'] += 0.1;
 						UpdateData['fort_bonus_list'] = UserIndexRecord['fort_bonus_list'];
-					NewEntityList.push({ 'entity_type': 7, 'entity_id': DragonData['id'] }); }
+					EntityList['new_entity_get_list'].push({ 'entity_type': 7, 'entity_id': DragonData['id'] }); }
 				break;
 			case 8:
 				let NewMaterialData = { 'material_id': ItemTable[y][IDName], 'quantity': ItemTable[y][AmountName] }
@@ -798,11 +996,20 @@ function ItemParser(ItemTable, UserSessionRecord, UserIndexRecord, TableType) {
 					else { UserIndexRecord['material_list'][ItemIndex]['quantity'] += NewMaterialData['quantity']; }
 					UpdateData['material_list'].push(UserIndexRecord['material_list'][ItemIndex]);
 				}
+				
+				if (String(NewMaterialData['material_id']).slice(0,5) == "20700") {
+					const PrintID = "400900" + String(NewMaterialData['material_id']).slice(-2);
+					if (UserIndexRecord['ability_crest_list'].findIndex(x => x.ability_crest_id == PrintID) == -1) {
+						NewPrint = WyrmprintMap.CreateWyrmprintFromGift(PrintID);
+						UserIndexRecord['ability_crest_list'].push(NewPrint);
+						if (UpdateData['ability_crest_list'] == undefined) { UpdateData['ability_crest_list'] = []; }
+						UpdateData['ability_crest_list'].push(NewPrint);
+					}
+				}
 				break;
 			case 9:
-				UserSessionRecord['FortData']['BuildID'] += 1;
 				const BuildTemplate = {
-					'build_id': UserSessionRecord['FortData']['BuildID'],
+					'build_id': UserIndexRecord['build_list'][res.locals.UserIndexRecord['build_list'].length - 1]['build_id'] + 1,
 					'fort_plant_detail_id': parseInt(String(ItemTable[y][IDName] + "01")),
 					'position_x': -1,
 					'position_z': -1,
@@ -819,6 +1026,51 @@ function ItemParser(ItemTable, UserSessionRecord, UserIndexRecord, TableType) {
 				if (UpdateData['build_list'] == undefined) { UpdateData['build_list'] = []; }
 				UpdateData['build_list'].push(BuildTemplate);
 				UserIndexRecord['build_list'].push(BuildTemplate);
+				break;
+			case 12:
+				if (UpdateData['ability_crest_list'] == undefined) { UpdateData['ability_crest_list'] = []; }
+				if (UserIndexRecord['ability_crest_list'].findIndex(x => x.ability_crest_id == ItemTable[y][IDName]) == -1) {
+					const PrintData = WyrmprintMap.CreateWyrmprintFromGift(ItemTable[y][IDName]);
+					UpdateData['ability_crest_list'].push(PrintData); UserIndexRecord['ability_crest_list'].push(PrintData);
+					EntityList['new_entity_get_list'].push({ 'entity_type': 12, 'entity_id': ItemTable[y][IDName] }); }
+				else {
+					const PrintRarity = WyrmprintMap.GetWyrmprintInfo(ItemTable[y][IDName], "rarity");
+					switch(PrintRarity) {
+						case 3:
+							UserIndexRecord['user_data']['dew_point'] += 300 * ItemTable[y][AmountName];
+							EntityList['converted_entity_list'].push({
+								'before_entity_type': ItemTable[y][TypeName],
+								'before_entity_id': ItemTable[y][IDName],
+								'before_entity_quantity': ItemTable[y][AmountName],
+								'after_entity_type': 14,
+								'after_entity_id': 0,
+								'after_entity_quantity': 300 * ItemTable[y][AmountName]
+							});
+							break;
+						case 4:
+							UserIndexRecord['user_data']['dew_point'] += 1000 * ItemTable[y][AmountName];
+							EntityList['converted_entity_list'].push({
+								'before_entity_type': ItemTable[y][TypeName],
+								'before_entity_id': ItemTable[y][IDName],
+								'before_entity_quantity': ItemTable[y][AmountName],
+								'after_entity_type': 14,
+								'after_entity_id': 0,
+								'after_entity_quantity': 1000 * ItemTable[y][AmountName]
+							});
+							break;
+						case 5:
+							UserIndexRecord['user_data']['dew_point'] += 3000 * ItemTable[y][AmountName];
+							EntityList['converted_entity_list'].push({
+								'before_entity_type': ItemTable[y][TypeName],
+								'before_entity_id': ItemTable[y][IDName],
+								'before_entity_quantity': ItemTable[y][AmountName],
+								'after_entity_type': 14,
+								'after_entity_id': 0,
+								'after_entity_quantity': 3000 * ItemTable[y][AmountName]
+							});
+							break;
+					}
+				}
 				break;
 			case 13:
 				UserSessionRecord['Diamantium'] += ItemTable[y][AmountName];
@@ -841,41 +1093,204 @@ function ItemParser(ItemTable, UserSessionRecord, UserIndexRecord, TableType) {
 				if (UserIndexRecord['user_data']['quest_skip_point'] > 400) { UserIndexRecord['user_data']['quest_skip_point'] = 400; }
 				break;
 			case 17:
-				const TicketData = { 'entity_id': ItemTable[y][IDName], 'entity_quantity': ItemTable[y][AmountName] }
-				if (UpdateData['summon_ticket_list'] == undefined) { UpdateData['summon_ticket_list'] = []; }
-					const TicketIndex = UserIndexRecord['summon_ticket_list'].findIndex(x => x.summon_ticket_id == TicketData['entity_id']);
-					if (TicketIndex != -1) {
-						const TickTotal = UserIndexRecord['summon_ticket_list'][TicketIndex]['quantity'] + TicketData['entity_quantity'];
-						if (TickTotal > 999) {
-							UserIndexRecord['summon_ticket_list'][TicketIndex]['quantity'] = 999;
-							UpdateData['summon_ticket_list'] = UserIndexRecord['summon_ticket_list']; }
-						else { UserIndexRecord['summon_ticket_list'][TicketIndex]['summon_ticket_id'] += TicketData['entity_quantity'];
-							   UpdateData['summon_ticket_list'] = UserIndexRecord['summon_ticket_list']; } }
-					else { const GivenKeyID = KeyIDByTicket(TicketData['entity_id']);
-						   UserIndexRecord['summon_ticket_list'].push({'key_id': GivenKeyID, 'summon_ticket_id': TicketData['entity_id'], 'quantity': TicketData['entity_quantity'], 'use_time_limit': 0});
-						   UpdateData['summon_ticket_list'] = UserIndexRecord['summon_ticket_list']; }
+				const TicketData = { 'id': ItemTable[y][IDName], 'quantity': ItemTable[y][AmountName] }
+				const TicketIndex = UserIndexRecord['summon_ticket_list'].findIndex(x => x.summon_ticket_id == TicketData['id']);
+				if (TicketIndex != -1) {
+					const TickTotal = UserIndexRecord['summon_ticket_list'][TicketIndex]['quantity'] + TicketData['quantity'];
+					if (TickTotal > 999) { UserIndexRecord['summon_ticket_list'][TicketIndex]['quantity'] = 999; }
+					else { UserIndexRecord['summon_ticket_list'][TicketIndex]['quantity'] += TicketData['quantity']; } 
+				}
+				else {
+					const GivenKeyID = KeyIDByTicket(TicketData['id']);
+					UserIndexRecord['summon_ticket_list'].push({'key_id': GivenKeyID, 'summon_ticket_id': TicketData['id'], 'quantity': TicketData['quantity'], 'use_time_limit': 0});
+				}
+				UpdateData['summon_ticket_list'] = UserIndexRecord['summon_ticket_list'];
 				break;
 			case 18:
 				UserIndexRecord['user_data']['mana_point'] += ItemTable[y][AmountName];
 				if (UserIndexRecord['user_data']['mana_point'] > 3000000000) { UserIndexRecord['user_data']['mana_point'] = 3000000000; }
 				break;
+			case 20:
+				const RaidID = String(QuestID).slice(0, 5);
+				const SpecialRaidItems = [ 2041308, 2042908, 2042909, 2042506, 2043306 ];
+				const RaidItem = ItemTable[y][IDName];
+				if (!SpecialRaidItems.includes(RaidItem)) {
+					const RaidItemType = parseInt(String(RaidItem).slice(-1));
+					switch(RaidItemType) {
+						case 1: //blazon
+							UserSessionRecord['Event']['Raid'][RaidID]['UserData']['box_summon_point'] += ItemTable[y][AmountName];
+							break;
+						case 2: //bronze emblem
+							UserSessionRecord['Event']['Raid'][RaidID]['UserData']['raid_point_1'] += ItemTable[y][AmountName];
+							break;
+						case 3: //silver emblem
+							UserSessionRecord['Event']['Raid'][RaidID]['UserData']['raid_point_2'] += ItemTable[y][AmountName];
+							break;
+						case 4: //gold emblem
+							UserSessionRecord['Event']['Raid'][RaidID]['UserData']['raid_point_3'] += ItemTable[y][AmountName];
+							break;
+						case 5: //otherworld gem (tier 1)
+							UserSessionRecord['Event']['Raid'][RaidID]['UserData']['advent_item_quantity_1'] += ItemTable[y][AmountName];
+							break;
+						case 6: //otherworld crystal (tier 2)
+							UserSessionRecord['Event']['Raid'][RaidID]['UserData']['advent_item_quantity_2'] += ItemTable[y][AmountName];
+							break;
+						case 7: //omega key
+							UserSessionRecord['Event']['Raid'][RaidID]['UserData']['ultimate_key_count'] += ItemTable[y][AmountName];
+							break;
+					}
+				}
+				break;
+			case 22:
+				const BuildID = String(QuestID).slice(0, 5);
+				const BuildItem = ItemTable[y][IDName];
+				const BuildItemType = parseInt(String(BuildItem).slice(-1));
+				switch(BuildItemType) {
+					case 1: //event point
+						UserSessionRecord['Event']['Build'][BuildID]['UserData']['user_build_event_item_list'][0]['event_item_value'] += ItemTable[y][AmountName];
+						break;
+					case 2: //tier 1
+						UserSessionRecord['Event']['Build'][BuildID]['UserData']['user_build_event_item_list'][1]['event_item_value'] += ItemTable[y][AmountName];
+						break;
+					case 3: //tier 2
+						UserSessionRecord['Event']['Build'][BuildID]['UserData']['user_build_event_item_list'][2]['event_item_value'] += ItemTable[y][AmountName];
+						break;
+				}
+				break;
 			case 23:
 				UserIndexRecord['user_data']['crystal'] += ItemTable[y][AmountName];
 				if (UserIndexRecord['user_data']['crystal'] > 3000000000) { UserIndexRecord['user_data']['crystal'] = 3000000000; }
+				break;
+			case 25:
+				const CLB01ID = String(QuestID).slice(0, 5);
+				const CLB01Item = ItemTable[y][IDName];
+				const CLB01ItemType = parseInt(String(CLB01Item).slice(-1));
+				switch(CLB01ItemType) {
+					case 1: //tier 1
+						UserSessionRecord['Event']['CLB01'][CLB01ID]['UserData']['user_clb_01_event_item_list'][0]['event_item_value'] += ItemTable[y][AmountName];
+						break;
+					case 2: //tier 2
+						UserSessionRecord['Event']['CLB01'][CLB01ID]['UserData']['user_clb_01_event_item_list'][1]['event_item_value'] += ItemTable[y][AmountName];
+						break;
+					case 3: //event point
+						UserSessionRecord['Event']['CLB01'][CLB01ID]['UserData']['user_clb_01_event_item_list'][2]['event_item_value'] += ItemTable[y][AmountName];
+						break;
+				}
+				break;
+			case 26:
+				if (UserIndexRecord['astral_item_list'][0] == undefined) { UserIndexRecord['astral_item_list'] = [{
+					'astral_item_id': 10101,
+					'quantity': ItemTable[y][AmountName]
+					}]; }
+				else {
+					if ((UserIndexRecord['astral_item_list'][0]['quantity'] + ItemTable[y][AmountName]) > 300) { 
+						const OverCount = (UserIndexRecord['astral_item_list'][0]['quantity'] + ItemTable[y][AmountName]) - 300;
+						UserIndexRecord['astral_item_list'][0]['quantity'] = 300;
+						EntityList['over_discard_entity_list'].push({
+							'entity_type': 26,
+							'entity_id': 10101,
+							'entity_quantity': OverCount
+						});
+					}
+					else { UserIndexRecord['astral_item_list'][0]['quantity'] += ItemTable[y][AmountName]; } }
+				UpdateData['astral_item_list'] = UserIndexRecord['astral_item_list'];
 				break;
 			case 28:
 				UserIndexRecord['user_data']['build_time_point'] += ItemTable[y][AmountName];
 				if (UserIndexRecord['user_data']['build_time_point'] > 999) { UserIndexRecord['user_data']['build_time_point'] = 999; }
 				break;
+			case 33:
+				UpdateData['gather_item_list'] = [];
+				const GatherIndex = UserIndexRecord['gather_item_list'].findIndex(x => x.gather_item_id == ItemTable[y][IDName]);
+				if (GatherIndex == -1) {
+					const GatherItemData = {
+						"gather_item_id": 10001,
+						"quantity": ItemTable[y][AmountName],
+						"quest_last_weekly_reset_time": Math.floor(Date.now() / 1000),
+						"quest_take_weekly_quantity": ItemTable[y][AmountName]
+					}
+					UserIndexRecord['gather_item_list'].push(GatherItemData); 
+					UpdateData['gather_item_list'].push(GatherItemData);
+				}
+				else {
+					UserIndexRecord['gather_item_list'][GatherIndex]['quantity'] += ItemTable[y][AmountName];
+					UserIndexRecord['gather_item_list'][GatherIndex]['quest_take_weekly_quantity'] += ItemTable[y][AmountName];
+					UpdateData['gather_item_list'].push(UserIndexRecord['gather_item_list'][GatherIndex]);
+				}
+				break;
+			case 37:
+				const WeaponSkinIndex = UserIndexRecord['weapon_skin_list'].findIndex(x => x.weapon_skin_id == ItemTable[y][IDName]);
+				if (WeaponSkinIndex == -1) {
+					const SkinTemplate = {
+						"weapon_skin_id": ItemTable[y][IDName],
+						"is_new": 1,
+						"gettime": Math.floor(Date.now() / 1000)
+					}
+					if (UpdateData['weapon_skin_list'] == undefined) { UpdateData['weapon_skin_list'] = []; }
+					UpdateData['weapon_skin_list'].push(SkinTemplate);
+					UserIndexRecord['weapon_skin_list'].push(SkinTemplate);
+				}
+				break;
 			case 39:
-				const NewPrintData = WyrmprintMap.CreateWyrmprintFromGift(ItemTable[y][IDName]);
 				if (UpdateData['ability_crest_list'] == undefined) { UpdateData['ability_crest_list'] = []; }
-				UserIndexRecord['ability_crest_list'].push(NewPrintData);
-				UpdateData['ability_crest_list'].push(NewPrintData);
+				if (UserIndexRecord['ability_crest_list'].findIndex(x => x.ability_crest_id == ItemTable[y][IDName]) == -1) {
+					const PrintData = WyrmprintMap.CreateWyrmprintFromGift(ItemTable[y][IDName]);
+					UpdateData['ability_crest_list'].push(PrintData); UserIndexRecord['ability_crest_list'].push(PrintData);
+					EntityList['new_entity_get_list'].push({ 'entity_type': 12, 'entity_id': ItemTable[y][IDName] }); }
+				else {
+					const PrintRarity = WyrmprintMap.GetWyrmprintInfo(ItemTable[y][IDName], "rarity");
+					switch(PrintRarity) {
+						case 3:
+							UserIndexRecord['user_data']['dew_point'] += 300 * ItemTable[y][AmountName];
+							EntityList['converted_entity_list'].push({
+								'before_entity_type': ItemTable[y][TypeName],
+								'before_entity_id': ItemTable[y][IDName],
+								'before_entity_quantity': ItemTable[y][AmountName],
+								'after_entity_type': 14,
+								'after_entity_id': 0,
+								'after_entity_quantity': 300 * ItemTable[y][AmountName]
+							});
+							break;
+						case 4:
+							UserIndexRecord['user_data']['dew_point'] += 1000 * ItemTable[y][AmountName];
+							EntityList['converted_entity_list'].push({
+								'before_entity_type': ItemTable[y][TypeName],
+								'before_entity_id': ItemTable[y][IDName],
+								'before_entity_quantity': ItemTable[y][AmountName],
+								'after_entity_type': 14,
+								'after_entity_id': 0,
+								'after_entity_quantity': 1000 * ItemTable[y][AmountName]
+							});
+							break;
+						case 5:
+							UserIndexRecord['user_data']['dew_point'] += 3000 * ItemTable[y][AmountName];
+							EntityList['converted_entity_list'].push({
+								'before_entity_type': ItemTable[y][TypeName],
+								'before_entity_id': ItemTable[y][IDName],
+								'before_entity_quantity': ItemTable[y][AmountName],
+								'after_entity_type': 14,
+								'after_entity_id': 0,
+								'after_entity_quantity': 3000 * ItemTable[y][AmountName]
+							});
+							break;
+					}
+				}
+				break;
+			case 42:
+				switch(ItemTable[y][IDName]) {
+					case 10001:
+						UserSessionRecord['Kaleidoscape']['DmodeInfo']['dmode_point_1'] += ItemTable[y][AmountName];
+						break;
+					case 10002:
+						UserSessionRecord['Kaleidoscape']['DmodeInfo']['dmode_point_2'] += ItemTable[y][AmountName];
+						break;
+				}
+				UpdateData['dmode_info'] = UserSessionRecord['Kaleidoscape']['DmodeInfo'];
 				break;
 		}
 	}
-	return [UserSessionRecord, UserIndexRecord, UpdateData, NewEntityList];
+	UpdateData['user_data'] = UserIndexRecord['user_data'];
+	return [UserSessionRecord, UserIndexRecord, UpdateData, EntityList];
 }
 
 function CharacterDataReturn(UserIndexRecord, Character_ID) {
@@ -896,6 +1311,7 @@ function CharacterDataReturn(UserIndexRecord, Character_ID) {
 		'additional_max_level': CharacterData['additional_max_level'],
 		'hp': CharacterData['hp'],
 		'attack': CharacterData['attack'],
+		'defence': 0,
 		'skill_1_level': CharacterData['skill_1_level'],
 		'skill_2_level': CharacterData['skill_2_level'],
 		'ability_1_level': CharacterData['ability_1_level'],
@@ -928,7 +1344,12 @@ function WyrmprintDataReturn(UserIndexRecord, WyrmprintID) {
 	}
 	return Template;
 }
-function WeaponDataReturn(UserIndexRecord, WeaponID) {
+function WeaponDataReturn(UserIndexRecord, CharacterID, WeaponID) {
+	if (CharacterID == 0) { return {}; }
+	if (WeaponID == 0) {
+		CharacterWeapon = CharacterMap.GetCharacterInfo(CharacterID, "weapon_type");
+		WeaponID = parseInt(String("30" + CharacterWeapon + "19901"));
+	}
 	const WeaponData = UserIndexRecord.weapon_body_list.find(x => x.weapon_body_id == WeaponID);
 	if (WeaponData == undefined) { return {}; }
 	let AbilityLevel = 1;
@@ -952,9 +1373,28 @@ function WeaponDataReturn(UserIndexRecord, WeaponID) {
 	return Template
 }
 
-function PopulateUnitData(PartyNo_List, ViewerID, UserIndexRecord) {
+function PassiveDataReturn(UserIndexRecord, CharacterID) {
+	if (CharacterID == 0) { return []; }
+	const ElementType = CharacterMap.GetCharacterInfo(CharacterID, 'elemental_type');
+	const WeaponType = CharacterMap.GetCharacterInfo(CharacterID, 'weapon_type');
+	const PassiveList = UserIndexRecord['weapon_passive_ability_list'];
+	const CharacterString = parseInt("10" + WeaponType + "0" + ElementType);
+	let Template = [];
+	for (let x in PassiveList) {
+		const CurrentID = PassiveList[x]['weapon_passive_ability_id'];
+		const MatchID = parseInt(String(CurrentID).slice(0, String(CurrentID).length - 2));
+		if (MatchID == CharacterString) {
+			Template.push(PassiveList[x]);
+		}
+	}
+	return Template;
+}
+
+function PopulateUnitData(PartyNo_List, ViewerID, UserIndexRecord, UserSessionRecord, QuestID) {
 	let PartyUnitList = [];
 	let PartyListSettings = [];
+	let EventBoost = [];
+	let EventPassive = [];
 	for (let i in PartyNo_List) {
 		let CompletedCharacters = 0;
 		while (CompletedCharacters <= 3) {
@@ -1011,29 +1451,35 @@ function PopulateUnitData(PartyNo_List, ViewerID, UserIndexRecord) {
 			const DragonIndex = UserIndexRecord.dragon_list.findIndex(x => x.dragon_key_id === Dragon_Key_ID)
 			let DragonBond = 0;
 			if (DragonIndex != -1) {
-				const DragonID = UserIndexRecord['dragon_list'][DragonIndex]['dragon_id']
+				const DragonID = UserIndexRecord['dragon_list'][DragonIndex]['dragon_id'];
 				if (DragonID == 20050522) { DragonBond = 30; }
-				else { const DragonBondIndex = UserIndexRecord.dragon_reliability_list.findIndex(x => x.dragon_id === DragonID)
-					 DragonBond = UserIndexRecord['dragon_reliability_list'][DragonBondIndex]['reliability_level'] }
+				else { const DragonBondIndex = UserIndexRecord.dragon_reliability_list.findIndex(x => x.dragon_id === DragonID);
+					 DragonBond = UserIndexRecord['dragon_reliability_list'][DragonBondIndex]['reliability_level']; }
 			}
 
 			// SANITIZE DATA.
 			let CharacterData = CharacterDataReturn(UserIndexRecord, Character_ID);
-			let WeaponSkinData = UserIndexRecord.weapon_skin_list.find(x => x.weapon_skin_id === Weapon_Skin_ID)
-			let DragonData = UserIndexRecord.dragon_list.find(x => x.dragon_key_id === Dragon_Key_ID)
-			let TalismanData = UserIndexRecord.talisman_list.find(x => x.talisman_key_id === Talisman_ID)
+			let WeaponSkinData = UserIndexRecord.weapon_skin_list.find(x => x.weapon_skin_id === Weapon_Skin_ID);
+			let DragonData = UserIndexRecord.dragon_list.find(x => x.dragon_key_id === Dragon_Key_ID);
+			let TalismanData = UserIndexRecord.talisman_list.find(x => x.talisman_key_id === Talisman_ID);
+			let PassiveData = PassiveDataReturn(UserIndexRecord, Character_ID, Weapon_Body_ID);
 			if (CharacterData == undefined) { CharacterData = {}; } if (WeaponSkinData == undefined) { WeaponSkinData = {}; }
 			if (DragonData == undefined) { DragonData = {}; } if (TalismanData == undefined) { TalismanData = {}; }
 			if (Crest_Slot_Type_One[0] == undefined) { Crest_Slot_Type_One[0] = {}; } if (Crest_Slot_Type_One[1] == undefined) { Crest_Slot_Type_One[1] = {}; } if (Crest_Slot_Type_One[2] == undefined) { Crest_Slot_Type_One[2] = {}; }
 			if (Crest_Slot_Type_Two[0] == undefined) { Crest_Slot_Type_Two[0] = {}; } if (Crest_Slot_Type_Two[1] == undefined) { Crest_Slot_Type_Two[1] = {}; }
 			if (Crest_Slot_Type_Thr[0] == undefined) { Crest_Slot_Type_Thr[0] = {}; } if (Crest_Slot_Type_Thr[1] == undefined) { Crest_Slot_Type_Thr[1] = {}; }
 
+			if (String(QuestID).slice(0,3) == "204" && EventMap.EventInfoMap[String(QuestID).slice(0,5)]['event_character'] == Character_ID) { 
+				CharacterData['attack'] = CharacterData['attack'] + Math.floor(CharacterData['attack'] * 1.30);
+				CharacterData['defence'] = 30;
+			}
+
 			let FinalCharaData = {
 				'position': CompletedCharacters + 1,
 				'chara_data': CharacterData,
 				'dragon_data': DragonData,
 				'weapon_skin_data': WeaponSkinData,
-				'weapon_body_data': WeaponDataReturn(UserIndexRecord, Weapon_Body_ID),
+				'weapon_body_data': WeaponDataReturn(UserIndexRecord, Character_ID, Weapon_Body_ID),
 				'crest_slot_type_1_crest_list': Crest_Slot_Type_One,
 				'crest_slot_type_2_crest_list': Crest_Slot_Type_Two,
 				'crest_slot_type_3_crest_list': Crest_Slot_Type_Thr,
@@ -1041,7 +1487,7 @@ function PopulateUnitData(PartyNo_List, ViewerID, UserIndexRecord) {
 				'edit_skill_1_chara_data': SharedSkill_One_Data,
 				'edit_skill_2_chara_data': SharedSkill_Two_Data,
 				'dragon_reliability_level': DragonBond,
-				'game_weapon_passive_ability_list': []
+				'game_weapon_passive_ability_list': PassiveData
 			}
 			if (PartyNo_List[i] != undefined) { const PositionCalc = i * 4; FinalCharaData['position'] += PositionCalc; PartyUnitList.push(FinalCharaData); }
 			CompletedCharacters++;
@@ -1051,11 +1497,17 @@ function PopulateUnitData(PartyNo_List, ViewerID, UserIndexRecord) {
 				PartyListSettings.push(UserIndexRecord['party_list'][PartyNo_List[i] - 1]['party_setting_list'][y]); y++; } }
 	}
 
+	if (String(QuestID).slice(0,3) == 204) {
+		if (UserSessionRecord['Event']['Raid'][String(QuestID).slice(0,5)]['Passive'][0] != undefined) {
+			EventPassive = UserSessionRecord['Event']['Raid'][String(QuestID).slice(0,5)]['Passive']['event_passive_grow_list'];
+		}
+	}
+	
 	const QuestUnitData = {
 		'party_unit_list': PartyUnitList,
 		'fort_bonus_list': UserIndexRecord['fort_bonus_list'],
-		'event_boost': [],
-		'event_passive_grow_list': []
+		'event_boost': EventBoost,
+		'event_passive_grow_list': EventPassive
 	}
 
 	return [QuestUnitData, PartyListSettings];
@@ -1090,13 +1542,14 @@ function PopulateSupportData(SupportSessionRecord, SupportIndexRecord) {
 	const FinalSupportData = {
 		'viewer_id': SupportIndexRecord['user_data']['viewer_id'],
 		'name': SupportIndexRecord['user_data']['name'],
+		'is_friend': 1,
 		'level': SupportIndexRecord['user_data']['level'],
 		'last_login_date': SupportIndexRecord['user_data']['last_login_time'],
 		'emblem_id': SupportIndexRecord['user_data']['emblem_id'],
 		'max_party_power': SupportIndexRecord['party_power_data']['max_party_power'],
 		'chara_data': CharacterData,
 		'dragon_data': DragonData,
-		'weapon_body_data': WeaponDataReturn(SupportIndexRecord, SupportSessionRecord['SupportCharacter']['equip_weapon_body_id']),
+		'weapon_body_data': WeaponDataReturn(SupportIndexRecord, SupportSessionRecord['SupportCharacter']['chara_id'], SupportSessionRecord['SupportCharacter']['equip_weapon_body_id']),
 		'crest_slot_type_1_crest_list': Crest_Slot_Type_One,
 		'crest_slot_type_2_crest_list': Crest_Slot_Type_Two,
 		'crest_slot_type_3_crest_list': Crest_Slot_Type_Thr,
@@ -1105,6 +1558,7 @@ function PopulateSupportData(SupportSessionRecord, SupportIndexRecord) {
 	const FinalSupportDataRecord = [{
 		'viewer_id': SupportIndexRecord['user_data']['viewer_id'],
 		'name': SupportIndexRecord['user_data']['name'],
+		'is_friend': 1,
 		'level': SupportIndexRecord['user_data']['level'],
 		'last_login_date': SupportIndexRecord['user_data']['last_login_time'],
 		'emblem_id': SupportIndexRecord['user_data']['emblem_id'],
@@ -1121,9 +1575,11 @@ function PopulateSupportData(SupportSessionRecord, SupportIndexRecord) {
 	return [FinalSupportData, FinalSupportDataRecord];
 }
 
-function PopulateAssignedUnitData(PartySettings, ViewerID, UserIndexRecord) {
+function PopulateAssignedUnitData(PartySettings, ViewerID, UserIndexRecord, UserSessionRecord, QuestID) {
 	let PartyUnitList = [];
 	let PartyListSettings = [];
+	let EventBoost = [];
+	let EventPassive = [];
 	for (let CompletedCharacters in PartySettings) {
 		const Character_ID = PartySettings[CompletedCharacters]['chara_id']
 		const Dragon_Key_ID = PartySettings[CompletedCharacters]['equip_dragon_key_id']
@@ -1186,9 +1642,9 @@ function PopulateAssignedUnitData(PartySettings, ViewerID, UserIndexRecord) {
 
 		// SANITIZE DATA.
 		let CharacterData = CharacterDataReturn(UserIndexRecord, Character_ID);
-		let WeaponSkinData = UserIndexRecord.weapon_skin_list.find(x => x.weapon_skin_id === Weapon_Skin_ID)
-		let DragonData = UserIndexRecord.dragon_list.find(x => x.dragon_key_id === Dragon_Key_ID)
-		let TalismanData = UserIndexRecord.talisman_list.find(x => x.talisman_key_id === Talisman_ID)
+		let WeaponSkinData = UserIndexRecord.weapon_skin_list.find(x => x.weapon_skin_id === Weapon_Skin_ID);
+		let DragonData = UserIndexRecord.dragon_list.find(x => x.dragon_key_id === Dragon_Key_ID);
+		let TalismanData = UserIndexRecord.talisman_list.find(x => x.talisman_key_id === Talisman_ID);
 		if (CharacterData == undefined) { CharacterData = {}; } if (WeaponSkinData == undefined) { WeaponSkinData = {}; }
 		if (DragonData == undefined) { DragonData = {}; } if (TalismanData == undefined) { TalismanData = {}; }
 		if (Crest_Slot_Type_One[0] == undefined) { Crest_Slot_Type_One[0] = {}; } if (Crest_Slot_Type_One[1] == undefined) { Crest_Slot_Type_One[1] = {}; } if (Crest_Slot_Type_One[2] == undefined) { Crest_Slot_Type_One[2] = {}; }
@@ -1200,7 +1656,7 @@ function PopulateAssignedUnitData(PartySettings, ViewerID, UserIndexRecord) {
 			'chara_data': CharacterData,
 			'dragon_data': DragonData,
 			'weapon_skin_data': WeaponSkinData,
-			'weapon_body_data': WeaponDataReturn(UserIndexRecord, Weapon_Body_ID),
+			'weapon_body_data': WeaponDataReturn(UserIndexRecord, Character_ID, Weapon_Body_ID),
 			'crest_slot_type_1_crest_list': Crest_Slot_Type_One,
 			'crest_slot_type_2_crest_list': Crest_Slot_Type_Two,
 			'crest_slot_type_3_crest_list': Crest_Slot_Type_Thr,
@@ -1213,14 +1669,19 @@ function PopulateAssignedUnitData(PartySettings, ViewerID, UserIndexRecord) {
 		PartyUnitList.push(FinalCharaData);
 	}	
 
+	if (String(QuestID).slice(0,3) == 204) {
+		if (UserSessionRecord['Event']['Raid'][String(QuestID).slice(0,5)]['Passive'][0] != undefined) {
+			EventPassive = UserSessionRecord['Event']['Raid'][String(QuestID).slice(0,5)]['Passive']['event_passive_grow_list'];
+		}
+	}
 	const QuestUnitData = {
 		'party_unit_list': PartyUnitList,
 		'fort_bonus_list': UserIndexRecord['fort_bonus_list'],
-		'event_boost': [],
-		'event_passive_grow_list': []
+		'event_boost': EventBoost,
+		'event_passive_grow_list': EventPassive
 	}
 
 	return [QuestUnitData, PartySettings];
 }
 
-module.exports = { GetPlayerQuestData, GetPlayerQuestDataShort, GetPlayerQuestPlayCount, GetMissionNotice, LoginBonusData, MyPageInfo, MissionList, DungeonRecord, DungeonSkipRecord, SetClearParty, ItemParser, PopulateUnitData, PopulateSupportData, PopulateAssignedUnitData, WallRecord, GetWallDrop, KeyIDByTicket }
+module.exports = { GetUserSave, CleanIndex, GetPlayerQuestData, GetPlayerQuestDataShort, GetPlayerQuestPlayCount, GetMissionNotice, GenerateSummonOdds, LoginBonusData, MyPageInfo, MissionList, DungeonRecord, DungeonSkipRecord, SetClearParty, ItemParser, PopulateUnitData, PopulateSupportData, PopulateAssignedUnitData, WallRecord, GetWallDrop, KeyIDByTicket }

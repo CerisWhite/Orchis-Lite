@@ -3361,7 +3361,7 @@ function WyrmprintIDByName(WyrmprintName) {
 
 function CreateWyrmprintFromGift(ID) {
 	var Template = {
-        "ability_crest_id": ID,
+        "ability_crest_id": parseInt(ID),
         "buildup_count": 0,
         "limit_break_count": 0,
         "equipable_count": 1,
@@ -3450,5 +3450,57 @@ function DrawWyrmprint() {
 	return parseInt(RandomPrintID);
 }
 
+function DrawWyrmprintCorrect(SummonID, BoostRateList, IsTenfold, IsPlatinum) {
+	let RandomNumber = 0;
+	let AssignedWyrmprintID = 0;
+	let RerollCount = 5;
+	const SummonIndex = BoostRateList.findIndex(x => x.summon_id == SummonID);
+	if (SummonIndex != -1 && BoostRateList[SummonIndex]['wyrmprints'] != undefined && BoostRateList[SummonIndex]['wyrmprints'][0] != undefined) {
+		RandomNumber = Math.floor(Math.random() * BoostRateList[SummonIndex]['wyrmprints'].length);
+		AssignedWyrmprintID = BoostRateList[SummonIndex]['wyrmprints'][RandomNumber];
+		let BoostedDraw = Math.floor(Math.random() * BoostRateList[SummonIndex]['wyrmprints'].length);
+		let BoostedDrawID = BoostRateList[SummonIndex]['wyrmprints'][BoostedDraw];
+		if (BoostRateList[SummonIndex]['boost_rate'].includes(BoostedDrawID)) { AssignedWyrmprintID = BoostedDrawID; }
+		if (BoostRateList[SummonIndex]['boost_rate'].includes(AssignedWyrmprintID)) { RerollCount = 2; }
+		while (RerollCount > 0) {
+			let Redraw = Math.floor(Math.random() * BoostRateList[SummonIndex]['wyrmprints'].length);
+			let RedrawID = BoostRateList[SummonIndex]['wyrmprints'][Redraw];
+			if (IsTenfold) {
+				let MinRarity = 4; if (IsPlatinum) { MinRarity = 5; }
+				while (WyrmprintInfoMap[String(RedrawID)]['rarity'] < MinRarity) {
+					Redraw = Math.floor(Math.random() * BoostRateList[SummonIndex]['wyrmprints'].length);
+					RedrawID = BoostRateList[SummonIndex]['wyrmprints'][Redraw];
+				}
+			}
+			if (WyrmprintInfoMap[String(RedrawID)]['rarity'] < WyrmprintInfoMap[String(AssignedWyrmprintID)]['rarity']) { AssignedWyrmprintID = parseInt(RedrawID); }
+			RerollCount--;
+		}
+	}
+	else {
+		RandomNumber = Math.floor(Math.random() * Object.keys(WyrmprintInfoMap).length);
+		AssignedWyrmprintID = Object.keys(WyrmprintInfoMap)[RandomNumber];
+		while (WyrmprintInfoMap[String(AssignedWyrmprintID)]['rarity'] == 9) {
+			RandomNumber = Math.floor(Math.random() * Object.keys(WyrmprintInfoMap).length);
+			AssignedWyrmprintID = Object.keys(WyrmprintInfoMap)[RandomNumber];
+		}
+		while (RerollCount > 0) {
+			let Redraw = Math.floor(Math.random() * Object.keys(WyrmprintInfoMap).length);
+			let RedrawID = Object.keys(WyrmprintInfoMap)[Redraw];
+			while (WyrmprintInfoMap[String(RedrawID)]['rarity'] == 2 || WyrmprintInfoMap[String(RedrawID)]['rarity'] == 9) {
+				Redraw = Math.floor(Math.random() * Object.keys(WyrmprintInfoMap).length);
+				RedrawID = Object.keys(WyrmprintInfoMap)[Redraw];
+			}
+			if (WyrmprintInfoMap[String(RedrawID)]['rarity'] < WyrmprintInfoMap[String(AssignedWyrmprintID)]['rarity']) { AssignedWyrmprintID = parseInt(RedrawID); }
+			RerollCount--;
+		}
+	}
+	const CharacterData = {
+		'entity_type': 39,
+		'id': parseInt(AssignedWyrmprintID),
+		'rarity': WyrmprintInfoMap[String(AssignedWyrmprintID)]['rarity']
+	}
+	return CharacterData;
+}
 
-module.exports = { GetWyrmprintInfo, WyrmprintIDByName, WyrmprintAugment, CreateWyrmprintFromGift, WyrmprintBuild, DrawWyrmprint }
+
+module.exports = { GetWyrmprintInfo, WyrmprintIDByName, WyrmprintAugment, CreateWyrmprintFromGift, WyrmprintBuild, DrawWyrmprint, DrawWyrmprintCorrect }

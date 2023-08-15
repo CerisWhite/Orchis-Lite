@@ -12,10 +12,10 @@ function GenerateDefaultSaveData(UserName, ViewerID) {
             "exp": 0,
             "crystal": 400,
             "coin": 2000001000,
-            "max_dragon_quantity": 160,
+            "max_dragon_quantity": 1000,
             "max_weapon_quantity": 0,
             "max_amulet_quantity": 0,
-            "quest_skip_point": 312,
+            "quest_skip_point": 0,
             "main_party_no": 1,
             "emblem_id": 40000001,
             "active_memory_event_id": 0,
@@ -159,7 +159,7 @@ function GenerateDefaultSaveData(UserName, ViewerID) {
         ],
         "build_list": [
             {
-                "build_id": 558178,
+                "build_id": 599999,
                 "fort_plant_detail_id": 10010111,
                 "position_x": 16,
                 "position_z": 17,
@@ -174,7 +174,7 @@ function GenerateDefaultSaveData(UserName, ViewerID) {
                 "last_income_time": 19314814
             },
 			{
-                "build_id": 558179,
+                "build_id": 600000,
                 "fort_plant_detail_id": 10140109,
                 "position_x": 21,
                 "position_z": 3,
@@ -469,8 +469,31 @@ function GenerateDefaultSaveData(UserName, ViewerID) {
                 "current_mission_id": 0
             }
         },
-        "current_main_story_mission": [
-        ],
+        "current_main_story_mission": {
+		  "main_story_mission_group_id": 11,
+		  "main_story_mission_state_list": [
+			{
+			  "main_story_mission_id": 10110101,
+			  "state": 2
+			},
+			{
+			  "main_story_mission_id": 10110201,
+			  "state": 2
+			},
+			{
+			  "main_story_mission_id": 10110301,
+			  "state": 2
+			},
+			{
+			  "main_story_mission_id": 10110401,
+			  "state": 2
+			},
+			{
+			  "main_story_mission_id": 10110501,
+			  "state": 2
+			}
+		  ]
+		},
         "guild_notice": {
             "is_update_guild_apply_reply": 0,
             "guild_apply_count": 0,

@@ -1,6 +1,6 @@
 // Item Map
 
-var ItemInfoMap = {
+const ItemInfoMap = {
     "2040101": {
         "id": 2040101,
         "name": "Peregrine Blazon",

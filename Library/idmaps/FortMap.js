@@ -51861,4 +51861,15 @@ function GenerateBonuses(UserIndexRecord) {
 	return BonusList;
 }
 
-module.exports = { FacilityInfoMap, GetFacilityData, GenerateBonuses }
+function DragonRewards(DragonElement, Count) {
+	const Table = [
+		{
+			'entity_type': 8,
+			'entity_id': 201005001,
+			'entity_quantity': 1 * Count
+		}
+	]
+	return Table;
+}
+
+module.exports = { FacilityInfoMap, GetFacilityData, GenerateBonuses, DragonRewards }

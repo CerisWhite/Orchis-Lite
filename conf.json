@@ -3,8 +3,7 @@
 	"cert": "./cert/cert.pem",
 	"chain": "./cert/chain.pem",
 	"key": "./cert/privkey.pem",
-	"port": 80,
-	"is_unified_login": false,
-	"summon_cost": 100,
-	"banner_id": 1020166
+	"port": 3000,
+	"is_unified_login": true,
+	"cdn_url": "http://127.0.0.1"
 }

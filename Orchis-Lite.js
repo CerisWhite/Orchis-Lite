@@ -3170,7 +3170,7 @@ Server.post([iOS_Version + "/dungeon_start/start", Android_Version + "/dungeon_s
 		SupportSessionRecord = JSON.parse(fs.readFileSync('./Library/support/help_' + SupportViewerID + '.json'));
 		SupportIndexRecord = JSON.parse(fs.readFileSync('./Library/support/save_' + SupportViewerID + '.json'));
 		res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportPlayer'].push({'viewer_id': SupportViewerID, 'get_mana_point': 25, 'is_friend': 1, 'apply_send_status': 0});
-		res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportCharacter'] = DataManager.PopulateSupportData(SupportSessionRecord, SupportIndexRecord);
+		res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportCharacter'] = DataManager.PopulateSupportData(SupportSessionRecord, SupportIndexRecord['data']);
 		PartyListData[0]['support_data'] = res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportCharacter'][0]; }
 	let ReviveLimit = QuestMap.GetQuestInfo(QuestID, "revives"); if (ReviveLimit == undefined) { ReviveLimit = 0; }
 	const JSONDict = { 'data_headers': { 'result_code': 1 }, 'data': {
@@ -3226,7 +3226,7 @@ Server.post([iOS_Version + "/dungeon_start/start_assign_unit", Android_Version +
 		SupportSessionRecord = JSON.parse(fs.readFileSync('./Library/support/help_' + SupportViewerID + '.json'));
 		SupportIndexRecord = JSON.parse(fs.readFileSync('./Library/support/save_' + SupportViewerID + '.json'));
 		res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportPlayer'].push({'viewer_id': SupportViewerID, 'get_mana_point': 25, 'is_friend': 1, 'apply_send_status': 0});
-		res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportCharacter'] = DataManager.PopulateSupportData(SupportSessionRecord, SupportIndexRecord);
+		res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportCharacter'] = DataManager.PopulateSupportData(SupportSessionRecord, SupportIndexRecord['data']);
 		PartyListData[0]['support_data'] = res.locals.UserSessionRecord['DungeonRecord']['LastDungeonSupportCharacter'][0]; }
 	let ReviveLimit = QuestMap.GetQuestInfo(QuestID, "revives"); if (ReviveLimit == undefined) { ReviveLimit = 0; }
 	const JSONDict = { 'data_headers': { 'result_code': 1 }, 'data': {
@@ -3397,7 +3397,7 @@ Server.post([iOS_Version + "/wall_start/start", Android_Version + "/wall_start/s
 		SupportSessionRecord = JSON.parse(fs.readFileSync('./Library/support/help_' + SupportViewerID + '.json'));
 		SupportIndexRecord = JSON.parse(fs.readFileSync('./Library/support/save_' + SupportViewerID + '.json'));
 		res.locals.UserSessionRecord['Wall']['LastSupportPlayer'].push({'viewer_id': SupportViewerID, 'get_mana_point': 25, 'is_friend': 1, 'apply_send_status': 0});
-		res.locals.UserSessionRecord['Wall']['LastSupportCharacter'] = DataManager.PopulateSupportData(SupportSessionRecord, SupportIndexRecord); 
+		res.locals.UserSessionRecord['Wall']['LastSupportCharacter'] = DataManager.PopulateSupportData(SupportSessionRecord, SupportIndexRecord['data']); 
 		PartyListData[0]['support_data'] = res.locals.UserSessionRecord['Wall']['LastSupportCharacter'][0]; }
 	let SceneVar = 0; let ElementNumber = 0;
 	switch(WallID) {
@@ -3460,7 +3460,7 @@ Server.post([iOS_Version + "/wall_start/start_assign_unit", Android_Version + "/
 		SupportSessionRecord = JSON.parse(fs.readFileSync('./Library/support/help_' + SupportViewerID + '.json'));
 		SupportIndexRecord = JSON.parse(fs.readFileSync('./Library/support/save_' + SupportViewerID + '.json'));
 		res.locals.UserSessionRecord['Wall']['LastSupportPlayer'].push({'viewer_id': SupportViewerID, 'get_mana_point': 25, 'is_friend': 1, 'apply_send_status': 0});
-		res.locals.UserSessionRecord['Wall']['LastSupportCharacter'] = DataManager.PopulateSupportData(SupportSessionRecord, SupportIndexRecord); 
+		res.locals.UserSessionRecord['Wall']['LastSupportCharacter'] = DataManager.PopulateSupportData(SupportSessionRecord, SupportIndexRecord['data']); 
 		PartyListData[0]['support_data'] = res.locals.UserSessionRecord['Wall']['LastSupportCharacter'][0]; }
 	let SceneVar = 0; let ElementNumber = 0;
 	switch(WallID) {

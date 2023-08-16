@@ -2048,44 +2048,6 @@ Server.post([iOS_Version + "/quest/read_story", Android_Version + "/quest/read_s
 			}
 		}
 		
-		const QuestBase = String(ReadStory).slice(0, 3);
-		if (QuestBase == 204 || QuestBase == 214) {
-			let EventType = "Raid"; if (QuestBase == 214) { EventType = "CLB01"; }
-			const EventID = String(ReadStory).slice(0, 5);
-			if (EventMap.EventFriendStory(EventID) == ReadStory) {
-				const CharacterID = EventMap.EventInfoMap[EventID]['event_character'];
-				if (res.locals.UserIndexRecord['chara_list'].findIndex(x => x.chara_id == CharacterID) == -1) {
-					res.locals.UserSessionRecord['Event'][EventType][EventID]['Friendship'] = [
-						{
-							'chara_id': CharacterID,
-							'total_point': 0,
-							'is_temporary': 1
-						}
-					]
-					if (JSONDict['data']['update_data_list']['chara_list'] == undefined) { JSONDict['data']['update_data_list']['chara_list'] = []; }
-					if (JSONDict['data']['update_data_list']['unit_story_list'] == undefined) { JSONDict['data']['update_data_list']['unit_story_list'] = []; }
-					const CharacterData = CharacterMap.CreateCharacterFromGift(CharacterID, 1);
-					const CharacterStoryData = CharacterMap.GenerateUnitStory(CharacterID);
-					res.locals.UserIndexRecord['chara_list'].push(CharacterData);
-					res.locals.UserIndexRecord['unit_story_list'].push(CharacterStoryData[0], CharacterStoryData[1], CharacterStoryData[2], CharacterStoryData[3], CharacterStoryData[4]);
-					JSONDict['data']['update_data_list']['chara_list'].push(CharacterData);
-					JSONDict['data']['update_data_list']['unit_story_list'].push(CharacterStoryData[0], CharacterStoryData[1], CharacterStoryData[2], CharacterStoryData[3], CharacterStoryData[4]);
-					JSONDict['data']['entity_result']['new_get_entity_list'].push({ 'entity_type': 1, 'entity_id': CharacterID });
-					await WriteIndexRecord(res.locals.UserIndexRecord);
-				}
-				else {
-					res.locals.UserSessionRecord['Event'][EventType][EventID]['Friendship'] = [
-						{
-							'chara_id': CharacterID,
-							'total_point': 500,
-							'is_temporary': 0
-						}
-					]
-				}
-				await WriteSessionRecord(res.locals.UserSessionRecord);
-			}
-		}
-		
 		res.locals.UserIndexRecord['user_data']['crystal'] += 25;
 		JSONDict['data']['quest_story_reward_list'].push({"entity_type": 23, "entity_id": 0, "entity_quantity": 25});
 		JSONDict['data']['update_data_list']['user_data'] = res.locals.UserIndexRecord['user_data'];

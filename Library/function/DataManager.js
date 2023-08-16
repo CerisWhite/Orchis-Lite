@@ -229,28 +229,6 @@ function DungeonRecord(UserSessionRecord, UserIndexRecord, DungeonKey, PlayData)
 				UserIndexRecord['chara_list'][CharacterIndex]['exp'] = NewData[1];
 				FullGrowthTable.push(UserIndexRecord['chara_list'][CharacterIndex]);
 			} else { GrowthTable.push({'chara_id': CharacterData['chara_id'], 'take_exp': 0}); }
-			if (EventMap.EventFriendList[String(CharacterData['chara_id'])] != undefined) {
-				const FriendEventID = EventMap.EventFriendList[String(CharacterData['chara_id'])]['event_id'];
-				if ((UserSessionRecord['Event']['Raid'][String(FriendEventID)] != undefined) &&
-					(UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0] != undefined) &&
-					(UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] < 500)) {
-					const AddPoints = 6;
-					let TotalPoints = UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] + AddPoints;
-					if (TotalPoints > 500) {
-						TotalPoints = 500;
-						UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] = 500;
-						UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['is_temporary'] = 0;
-					}
-					else { UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] = TotalPoints; }
-					const FriendTemplate = {
-						'chara_id': CharacterData['chara_id'],
-						'add_point': AddPoints,
-						'total_point': TotalPoints,
-						'is_temporary': UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['is_temporary']
-					}
-					FriendshipTable.push(FriendTemplate);
-				}
-			}
 		}
 	}
 	const DropTable = UserSessionRecord['DungeonRecord']['DropTable'];
@@ -331,7 +309,6 @@ function DungeonRecord(UserSessionRecord, UserIndexRecord, DungeonKey, PlayData)
 			'entity_result': EntityList
 		}
 	}
-	if (IsMulti == true) { delete JSONDict['data']['repeat_data']; }
 	const PlayerLevel = LevelMap.Player(UserIndexRecord['user_data']['exp'] + PlayerEXP);
 	const CurrentLevel = UserIndexRecord['user_data']['level'];
 	UserIndexRecord['user_data']['level'] = PlayerLevel[0];
@@ -365,36 +342,6 @@ function DungeonRecord(UserSessionRecord, UserIndexRecord, DungeonKey, PlayData)
 	if (QuestIndex != -1) { UserIndexRecord['quest_list'][QuestIndex] = FinalQuestData[0]; }
 	else { UserIndexRecord['quest_list'].push(FinalQuestData[0]); }
 	// Include mission updates sometime
-	const QuestBase = String(UserSessionRecord['DungeonRecord']['LastQuestID']).slice(0, 3);
-	if (QuestBase == 204) {
-		const QuestID = UserSessionRecord['DungeonRecord']['LastQuestID'];
-		const EventID = String(QuestID).slice(0, 5);
-		const QuestSuffix = String(QuestID).slice(-3);
-		if (QuestSuffix == 302 || QuestSuffix == 501 || QuestSuffix == 602 || QuestSuffix == 604 || QuestSuffix == 606) {
-			UserSessionRecord['Event']['Raid'][EventID]['UserData']['advent_item_quantity_1'] -= 5;
-		}
-		else if (QuestSuffix == 301) {
-			UserSessionRecord['Event']['Raid'][EventID]['UserData']['advent_item_quantity_1'] -= 3;
-		}
-		else if (QuestSuffix == 401) {
-			UserSessionRecord['Event']['Raid'][EventID]['UserData']['advent_item_quantity_2'] -= 1;
-		}
-		
-		if (QuestSuffix == 501 && QuestIndex == -1) {
-			UserSessionRecord['Event']['Raid'][EventID]['Passive'] = {
-				'event_id': parseInt(EventID),
-				'event_passive_grow_list': [
-					{'passive_id': parseInt(EventID + "04"), 'progress': 1},
-					{'passive_id': parseInt(EventID + "05"), 'progress': 1},
-					{'passive_id': parseInt(EventID + "06"), 'progress': 1},
-					{'passive_id': parseInt(EventID + "07"), 'progress': 1},
-					{'passive_id': parseInt(EventID + "08"), 'progress': 1}
-				]
-			}
-			JSONDict['data']['ingame_result_data']['event_passive_up_list'] = [ UserSessionRecord['Event']['Raid'][EventID]['Passive'] ];
-			JSONDict['data']['update_data_list']['event_passive_list'] = [ UserSessionRecord['Event']['Raid'][EventID]['Passive'] ];
-		}
-	}
 	UserSessionRecord = MissionMap.CheckMedalCompletion(UserSessionRecord['DungeonRecord']['LastQuestID'], GrowthTable, UserSessionRecord);
 	return [JSONDict, UserIndexRecord, UserSessionRecord];
 }
@@ -421,28 +368,6 @@ function DungeonSkipRecord(UserSessionRecord, UserIndexRecord, DungeonKey, PlayC
 				UserIndexRecord['chara_list'][CharacterIndex]['exp'] = NewData[1];
 				FullGrowthTable.push(UserIndexRecord['chara_list'][CharacterIndex]);
 			} else { GrowthTable.push({'chara_id': CharacterData['chara_id'], 'take_exp': 0}); }
-			if (EventMap.EventFriendList[String(CharacterData['chara_id'])] != undefined) {
-				const FriendEventID =  EventMap.EventFriendList[String(CharacterData['chara_id'])]['event_id'];
-				if ((UserSessionRecord['Event']['Raid'][String(FriendEventID)] != undefined) &&
-					(UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0] != undefined) &&
-					(UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] < 500)) {
-					const AddPoints = 6 * PlayCount;
-					let TotalPoints = UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] + AddPoints;
-					if (TotalPoints > 500) {
-						TotalPoints = 500
-						UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] = 500;
-						UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['is_temporary'] = 0;
-					}
-					else { UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['total_point'] = TotalPoints; }
-					const FriendTemplate = {
-						'chara_id': CharacterData['chara_id'],
-						'add_point': AddPoints,
-						'total_point': TotalPoints,
-						'is_temporary': UserSessionRecord['Event']['Raid'][String(FriendEventID)]['Friendship'][0]['is_temporary']
-					}
-					FriendshipTable.push(FriendTemplate);
-				}
-			}
 		}
 	}
 	const DropTable = QuestMap.GetQuestDropsSkip(String(UserSessionRecord['DungeonRecord']['LastQuestID']), PlayCount);
@@ -1469,11 +1394,6 @@ function PopulateUnitData(PartyNo_List, ViewerID, UserIndexRecord, UserSessionRe
 			if (Crest_Slot_Type_Two[0] == undefined) { Crest_Slot_Type_Two[0] = {}; } if (Crest_Slot_Type_Two[1] == undefined) { Crest_Slot_Type_Two[1] = {}; }
 			if (Crest_Slot_Type_Thr[0] == undefined) { Crest_Slot_Type_Thr[0] = {}; } if (Crest_Slot_Type_Thr[1] == undefined) { Crest_Slot_Type_Thr[1] = {}; }
 
-			if (String(QuestID).slice(0,3) == "204" && EventMap.EventInfoMap[String(QuestID).slice(0,5)]['event_character'] == Character_ID) { 
-				CharacterData['attack'] = CharacterData['attack'] + Math.floor(CharacterData['attack'] * 1.30);
-				CharacterData['defence'] = 30;
-			}
-
 			let FinalCharaData = {
 				'position': CompletedCharacters + 1,
 				'chara_data': CharacterData,
@@ -1497,12 +1417,6 @@ function PopulateUnitData(PartyNo_List, ViewerID, UserIndexRecord, UserSessionRe
 				PartyListSettings.push(UserIndexRecord['party_list'][PartyNo_List[i] - 1]['party_setting_list'][y]); y++; } }
 	}
 
-	if (String(QuestID).slice(0,3) == 204) {
-		if (UserSessionRecord['Event']['Raid'][String(QuestID).slice(0,5)]['Passive'][0] != undefined) {
-			EventPassive = UserSessionRecord['Event']['Raid'][String(QuestID).slice(0,5)]['Passive']['event_passive_grow_list'];
-		}
-	}
-	
 	const QuestUnitData = {
 		'party_unit_list': PartyUnitList,
 		'fort_bonus_list': UserIndexRecord['fort_bonus_list'],

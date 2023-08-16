@@ -3248,7 +3248,7 @@ Server.post([iOS_Version + "/dungeon/fail", Android_Version + "/dungeon/fail"], 
 			'quest_id': res.locals.UserSessionRecord['DungeonRecord']['LastQuestID'],
 			'wall_id': 0,
 			'wall_level': 0,
-			'is_host': res.locals.UserSessionRecord['DungeonRecord']['LastDungeonIsHost']
+			'is_host': 1
 		},
 		'update_data_list': { 'functional_maintenance_list': [] }
 	}}

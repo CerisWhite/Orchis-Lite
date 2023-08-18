@@ -898,8 +898,8 @@ Server.post([iOS_Version + "/summon/get_summon_list", Android_Version + "/summon
 				'add_summon_point_stone': BannerList[x]['add_sigil_stone'],
 				'exchange_summon_point': BannerList[x]['sigil_cost'],
 				'status': 1,
-				'commence_date': BannerList[x]['start_time'],
-				'complete_date': BannerList[x]['end_time'],
+				'commence_date': parseInt(BannerList[x]['start_time']),
+				'complete_date': parseInt(BannerList[x]['end_time']),
 				'daily_count': 0,
 				'daily_limit': LimitCount,
 				'total_limit': 0,
@@ -3473,8 +3473,8 @@ Server.post([iOS_Version + "/wall_record/record", Android_Version + "/wall_recor
 Server.post([iOS_Version + "/wall/fail", Android_Version + "/wall/fail"], errorhandler(async (req,res) => {
 	const JSONDict = { 'data_headers': { 'result_code': 1 }, 'data': {
 		'result': 1,
-		'fail_helper_list': res.locals.UserSessionRecord['Wall']['LastSupportPlayer'],
-		'fail_helper_detail_list': res.locals.UserSessionRecord['Wall']['LastSupportCharacter'],
+		'fail_helper_list': res.locals.UserSessionRecord['Wall']['LastSupportCharacter'][1],
+		'fail_helper_detail_list': res.locals.UserSessionRecord['Wall']['LastSupportPlayer'],
 		'fail_quest_detail': {
 			'quest_id': 0,
 			'wall_id': res.locals.UserSessionRecord['Wall']['LastID'],

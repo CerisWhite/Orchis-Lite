@@ -3471,18 +3471,19 @@ Server.post([iOS_Version + "/wall_record/record", Android_Version + "/wall_recor
 	const Serialized = msgpack.pack(JSONDict); res.set(ResHeaders(Serialized.length)); res.end(Serialized);
 }));
 Server.post([iOS_Version + "/wall/fail", Android_Version + "/wall/fail"], errorhandler(async (req,res) => {
-	const JSONDict = { 'data_headers': { 'result_code': 1 }, 'data': {
-		'result': 1,
-		'fail_helper_list': res.locals.UserSessionRecord['Wall']['LastSupportPlayer'],
-		'fail_helper_detail_list': res.locals.UserSessionRecord['Wall']['LastSupportCharacter'],
-		'fail_quest_detail': {
-			'quest_id': 0,
-			'wall_id': res.locals.UserSessionRecord['Wall']['LastID'],
-			'wall_level': res.locals.UserSessionRecord['Wall']['LastLevel'],
-			'is_host': 1
-		}
-	}}
-	const Serialized = msgpack.pack(JSONDict); res.set(ResHeaders(Serialized.length)); res.end(Serialized);
+    const JSONDict = { 'data_headers': { 'result_code': 1 }, 'data': {
+        'result': 1,
+        'fail_helper_list': res.locals.UserSessionRecord['Wall']['LastSupportCharacter'][1],
+        'fail_helper_detail_list': res.locals.UserSessionRecord['Wall']['LastSupportPlayer'],
+        'fail_quest_detail': {
+            'quest_id': 0,
+            'wall_id': res.locals.UserSessionRecord['Wall']['LastID'],
+            'wall_level': res.locals.UserSessionRecord['Wall']['LastLevel'],
+            'is_host': 1
+        },
+        'update_data_list': { 'functional_maintenance_list': [] }
+    }}
+    const Serialized = msgpack.pack(JSONDict); res.set(ResHeaders(Serialized.length)); res.end(Serialized);
 }));
 
 Server.post([iOS_Version + "/dmode/entry", Android_Version + "/dmode/entry"], errorhandler(async (req,res) => {

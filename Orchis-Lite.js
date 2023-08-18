@@ -88,7 +88,7 @@ async function RecordManager (req, res, next) {
 
 let MasterAccountRecord = {};
 let MasterIDRecord = {};
-if (fs.existsSync('./Library/accountrecord.msg.gz')) {
+if (fs.existsSync('./Library/accountrecord.msg')) {
 	MasterAccountRecord = msgpack.unpack(fs.readFileSync('./Library/accountrecord.msg'));
 	MasterIDRecord = msgpack.unpack(fs.readFileSync('./Library/idrecord.msg'));
 }

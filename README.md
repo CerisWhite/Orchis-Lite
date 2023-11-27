@@ -14,7 +14,6 @@ To use:
 ---
 
 What doesn't work in this version:
-- Kaleidoscape
 - Suggestions
 - Guilds
 - Co-Op
